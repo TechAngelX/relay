@@ -1,6 +1,10 @@
+// src/App.tsx
 
 import { useState } from 'react';
 import { WalletConnect } from './components/WalletConnect';
+import { ContactList } from './components/ContactList';
+import { ChatWindow } from './components/ChatWindow';
+import { AddContactModal } from './components/AddContactModal';
 
 interface Account {
   address: string;
@@ -10,18 +14,61 @@ interface Account {
   };
 }
 
+interface Contact {
+  address: string;
+  name: string;
+  lastMessage?: string;
+  timestamp?: string;
+  online?: boolean;
+}
+
+interface Message {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: string;
+  isMine: boolean;
+}
+
 function App() {
   const [account, setAccount] = useState<Account | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+
+  const handleAddContact = (address: string, name: string) => {
+    const newContact: Contact = {
+      address,
+      name,
+      online: false,
+    };
+    setContacts([...contacts, newContact]);
+  };
+
+  const handleSendMessage = (text: string) => {
+    if (!selectedContact || !account) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      text,
+      sender: account.address,
+      timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      isMine: true,
+    };
+
+    setMessages([...messages, newMessage]);
+  };
 
   if (!account) {
     return <WalletConnect onConnect={setAccount} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="px-4 py-3">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">Relay</h1>
             <div className="flex items-center gap-3">
@@ -38,21 +85,28 @@ function App() {
           </div>
         </div>
       </div>
-      
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            ✅ Wallet Connected!
-          </h2>
-          <p className="text-gray-600 mb-6">
-            You're connected to Relay. Next up: building the chat interface.
-          </p>
-          <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
-            Connected to Westend Testnet
-          </div>
-        </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex overflow-hidden">
+        <ContactList
+          contacts={contacts}
+          onSelectContact={setSelectedContact}
+          selectedContact={selectedContact}
+          onAddContact={() => setIsAddContactModalOpen(true)}
+        />
+        <ChatWindow
+          contact={selectedContact}
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          currentUserAddress={account.address}
+        />
       </div>
+
+      <AddContactModal
+        isOpen={isAddContactModalOpen}
+        onClose={() => setIsAddContactModalOpen(false)}
+        onAddContact={handleAddContact}
+      />
     </div>
   );
 }
