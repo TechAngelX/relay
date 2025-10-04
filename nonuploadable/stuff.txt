@@ -1,0 +1,120 @@
+User registers their profile on Polkadot (name, public key)
+Contacts stored as on-chain relationships
+Messages happen off-chain via WebSocket
+Optional: store encrypted message hashes on-chain for verification
+
+This keeps costs reasonable (testnet is free anyway) whilst showing you understand how to use blockchain properly - only for data that benefits from decentralisation, not everything.
+
+Storing every message on-chain (pennies per message × thousands of messages = expensive)
+Storing contact lists on-chain (less expensive but still adds up)
+Frequent updates (every message, status change, etc.)
+Video chat will not run on-chain. That's impossible and not how blockchain works.
+Video chat is peer-to-peer:
+
+WebRTC connects browsers directly
+Video/audio streams go browser-to-browser via UDP
+No blockchain involved in the actual call
+No servers involved (except STUN/TURN for NAT traversal)
+
+What blockchain does:
+
+Authenticates users (wallet-based login)
+Stores user profiles/identities
+Maybe stores call metadata (who called whom, when, duration)
+Handles permissions (who can call whom)
+
+The video data itself:
+
+Never touches the blockchain
+Never touches your server (except signalling to start the call)
+Goes directly between peers using WebRTC
+
+Think of it like this:
+
+Blockchain = authentication and access control
+WebRTC = actual video streaming
+Your WebSocket server = just introduces the peers to each other
+
+This is the same model WhatsApp uses - their servers authenticate you and connect you to other users, but the actual call (if end-to-end encrypted) goes peer-to-peer.
+The blockchain angle for Relay is:
+
+Decentralised identity (not owned by a company)
+Verifiable on-chain reputation/credentials
+Censorship resistance
+User owns their data
+
+Not "video runs on blockchain" - that's technically nonsensical. The video runs peer-to-peer like all WebRTC apps, but the authentication and coordination layer is decentralised via Polkadot.
+
+1. On-chain identity/profiles:
+
+Store user profile (name, avatar hash) on Polkadot
+Other users verify identity is real via blockchain
+Can't be faked or taken down by a company
+
+2. Contact verification:
+
+Store contact relationships as on-chain records
+Proves "Alice added Bob as contact on [date]"
+Can't be manipulated by central server
+
+3. Reputation system:
+
+Track call history on-chain (who called whom, duration)
+Build verifiable reputation scores
+Show "verified active user since [date]"
+
+4. Token-gated features:
+
+Only users holding specific tokens can join certain channels
+NFT holders get special chat rooms
+DAO members get verified badges
+
+5. Payment channels:
+
+Paid calls (pay small amount per minute in DOT)
+Premium features unlocked with tokens
+Tip users for good conversations
+
+What blockchain DOESN'T do:
+
+Store actual messages (too expensive, not private)
+Handle video streams (technically impossible)
+Make the app faster (it adds overhead)
+
+The honest truth:
+Most of your app runs off-chain. The blockchain provides:
+
+Decentralised identity
+Censorship resistance
+Verifiable credentials
+No centralised control
+
+But the actual functionality (chat, video) happens via traditional tech (WebSocket, WebRTC). This is how ALL successful Web3 messaging apps work (Status, XMTP, Dialect). They use blockchain for identity/permissions, everything else runs off-chain for performance.
+
+No one can shut it down or censor it
+
+1. On-Chain User Profiles (Easiest, 1-2 days)
+Store user profiles on Polkadot:
+
+Username
+Avatar (IPFS hash)
+Bio
+Public key
+
+For your hackathon submission:
+You need to articulate why blockchain matters here. Right now your app works mostly like a traditional app (centralized WebSocket server). To justify using Polkadot, you need to add features that actually benefit from decentralization:
+
+On-chain profiles
+Token-gated access
+Verifiable reputation
+No central authority that can ban users
+
+Without these, judges will ask "why not just build this as a normal web app?" and you won't have a good answer. The blockchain needs to provide tangible value, not just be there for marketing purposes.
+
+Join
+token-gated
+communities
+Imagine a community group chat platform designed to work with crypto from the ground up.
+
+
+

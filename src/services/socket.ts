@@ -41,6 +41,72 @@ export const onUserOffline = (callback: (address: string) => void) => {
     socket.on('user-offline', callback);
 };
 
+// Room functions
+export const createRoom = (name: string, creator: string, tokenGate?: any) => {
+    if (!socket) return;
+    socket.emit('create-room', { name, creator, tokenGate });
+};
+
+export const joinRoom = (roomId: string, userAddress: string) => {
+    if (!socket) return;
+    socket.emit('join-room', { roomId, userAddress });
+};
+
+export const leaveRoom = (roomId: string, userAddress: string) => {
+    if (!socket) return;
+    socket.emit('leave-room', { roomId, userAddress });
+};
+
+export const getRoomInfo = (roomId: string) => {
+    if (!socket) return;
+    socket.emit('get-room', roomId);
+};
+
+export const sendRoomMessage = (roomId: string, from: string, text: string) => {
+    if (!socket) return;
+    socket.emit('send-room-message', {
+        roomId,
+        from,
+        text,
+        timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    });
+};
+
+export const onRoomCreated = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.on('room-created', callback);
+};
+
+export const onRoomJoined = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.on('room-joined', callback);
+};
+
+export const onUserJoinedRoom = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.on('user-joined-room', callback);
+};
+
+export const onUserLeftRoom = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.on('user-left-room', callback);
+};
+
+export const onReceiveRoomMessage = (callback: (message: any) => void) => {
+    if (!socket) return;
+    socket.on('receive-room-message', callback);
+};
+
+export const onRoomInfo = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.on('room-info', callback);
+};
+
+export const onRoomError = (callback: (error: string) => void) => {
+    if (!socket) return;
+    socket.on('room-error', callback);
+};
+
 export const disconnectSocket = () => {
     if (socket) {
         socket.disconnect();
