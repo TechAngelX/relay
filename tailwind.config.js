@@ -1,13 +1,15 @@
-// tailwind.config.js
-
-/** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        polkadot: {
+          pink: '#E6007A',
+          purple: '#552BBF',
+          dark: '#1A1A1A',
+        }
+      }
+    }
   },
   plugins: [],
 }

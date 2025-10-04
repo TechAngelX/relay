@@ -1,5 +1,3 @@
-// server/src/server.ts
-
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -18,7 +16,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
-const connectedUsers = new Map<string, string>();
+const connectedUsers = new Map<string, { socketId: string; username?: string }>();
 
 interface Room {
   id: string;
@@ -37,13 +35,15 @@ const rooms = new Map<string, Room>();
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('register', (address: string) => {
-    connectedUsers.set(address, socket.id);
-    console.log('User registered:', address);
-    io.emit('user-online', address);
+  socket.on('register', (data: { address: string; username?: string }) => {
+    connectedUsers.set(data.address, {
+      socketId: socket.id,
+      username: data.username
+    });
+    console.log('User registered:', data.address, data.username);
+    io.emit('user-online', { address: data.address, username: data.username });
   });
 
-  // Create room
   socket.on('create-room', (data: {
     name: string;
     creator: string;
@@ -75,8 +75,7 @@ io.on('connection', (socket) => {
     console.log('Room created:', roomId);
   });
 
-  // Join room
-  socket.on('join-room', (data: { roomId: string; userAddress: string }) => {
+  socket.on('join-room', (data: { roomId: string; userAddress: string; username?: string }) => {
     const room = rooms.get(data.roomId);
 
     if (!room) {
@@ -84,13 +83,12 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // TODO: Verify token ownership if tokenGate exists
-
     room.participants.add(data.userAddress);
     socket.join(data.roomId);
 
     io.to(data.roomId).emit('user-joined-room', {
       user: data.userAddress,
+      username: data.username,
       participants: Array.from(room.participants)
     });
 
@@ -104,8 +102,7 @@ io.on('connection', (socket) => {
     console.log('User joined room:', data.userAddress, data.roomId);
   });
 
-  // Leave room - DON'T delete room immediately
-  socket.on('leave-room', (data: { roomId: string; userAddress: string }) => {
+  socket.on('leave-room', (data: { roomId: string; userAddress: string; username?: string }) => {
     const room = rooms.get(data.roomId);
 
     if (room) {
@@ -114,12 +111,12 @@ io.on('connection', (socket) => {
 
       io.to(data.roomId).emit('user-left-room', {
         user: data.userAddress,
+        username: data.username,
         participants: Array.from(room.participants)
       });
 
       console.log('User left room:', data.userAddress, data.roomId);
 
-      // Only delete room if empty for more than 5 minutes
       if (room.participants.size === 0) {
         setTimeout(() => {
           const currentRoom = rooms.get(data.roomId);
@@ -127,12 +124,11 @@ io.on('connection', (socket) => {
             rooms.delete(data.roomId);
             console.log('Room deleted after timeout:', data.roomId);
           }
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 5 * 60 * 1000);
       }
     }
   });
 
-  // Get room info
   socket.on('get-room', (roomId: string) => {
     const room = rooms.get(roomId);
     if (room) {
@@ -147,10 +143,10 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Send message in room
   socket.on('send-room-message', (data: {
     roomId: string;
     from: string;
+    fromUsername?: string;
     text: string;
     timestamp: string;
   }) => {
@@ -159,6 +155,7 @@ io.on('connection', (socket) => {
     if (room && room.participants.has(data.from)) {
       io.to(data.roomId).emit('receive-room-message', {
         from: data.from,
+        fromUsername: data.fromUsername,
         text: data.text,
         timestamp: data.timestamp,
         id: Date.now().toString()
@@ -166,17 +163,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Original direct message handling
   socket.on('send-message', (data: {
     to: string;
     from: string;
     text: string;
     timestamp: string;
   }) => {
-    const recipientSocketId = connectedUsers.get(data.to);
+    const recipientData = connectedUsers.get(data.to);
 
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit('receive-message', {
+    if (recipientData) {
+      io.to(recipientData.socketId).emit('receive-message', {
         from: data.from,
         text: data.text,
         timestamp: data.timestamp,
@@ -189,17 +185,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    for (const [address, socketId] of connectedUsers.entries()) {
-      if (socketId === socket.id) {
+    for (const [address, data] of connectedUsers.entries()) {
+      if (data.socketId === socket.id) {
         connectedUsers.delete(address);
-        io.emit('user-offline', address);
+        io.emit('user-offline', { address, username: data.username });
 
-        // Remove from all rooms but don't delete rooms
         rooms.forEach((room, roomId) => {
           if (room.participants.has(address)) {
             room.participants.delete(address);
             io.to(roomId).emit('user-left-room', {
               user: address,
+              username: data.username,
               participants: Array.from(room.participants)
             });
           }

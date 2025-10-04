@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { WalletConnect } from './components/WalletConnect';
@@ -54,23 +52,21 @@ function App() {
 
   useEffect(() => {
     if (account) {
-      // Check if username exists
       const existingUsername = getUsername(account.address);
 
       if (existingUsername) {
         setUsernameState(existingUsername);
-        initializeSocket();
+        initialiseSocket();
       } else {
-        // Show username modal
         setShowUsernameModal(true);
       }
     }
   }, [account]);
 
-  const initializeSocket = () => {
+  const initialiseSocket = () => {
     if (!account) return;
 
-    const socket = connectSocket(account.address);
+    connectSocket(account.address, username || undefined);
 
     onReceiveMessage((message) => {
       const newMessage: Message = {
@@ -83,15 +79,15 @@ function App() {
       setMessages((prev) => [...prev, newMessage]);
     });
 
-    onUserOnline((address) => {
+    onUserOnline((data) => {
       setContacts((prev) =>
-          prev.map((c) => (c.address === address ? { ...c, online: true } : c))
+          prev.map((c) => (c.address === data.address ? { ...c, online: true } : c))
       );
     });
 
-    onUserOffline((address) => {
+    onUserOffline((data) => {
       setContacts((prev) =>
-          prev.map((c) => (c.address === address ? { ...c, online: false } : c))
+          prev.map((c) => (c.address === data.address ? { ...c, online: false } : c))
       );
     });
 
@@ -105,7 +101,7 @@ function App() {
       setUsername(account.address, newUsername);
       setUsernameState(newUsername);
       setShowUsernameModal(false);
-      initializeSocket();
+      initialiseSocket();
     }
   };
 
@@ -156,22 +152,24 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="min-h-screen bg-gray-50 flex flex-col">
-            <div className="bg-white shadow-sm border-b">
-              <div className="px-4 py-3">
+            <div className="bg-gradient-to-r from-polkadot-purple to-polkadot-pink shadow-lg">
+              <div className="px-6 py-4">
                 <div className="flex justify-between items-center">
-                  <h1 className="text-2xl font-bold text-gray-800">Relay</h1>
-                  <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold text-white tracking-tight">Relay</h1>
+                  <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsCreateRoomModalOpen(true)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium"
+                        className="bg-white text-polkadot-purple hover:bg-gray-50 px-5 py-2.5 rounded-lg transition text-sm font-semibold shadow-sm"
                     >
                       Create Room
                     </button>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-700">{displayName}</p>
-                      <p className="text-xs text-gray-500 font-mono">{account.address.slice(0, 6)}...{account.address.slice(-4)}</p>
+                      <p className="text-sm font-semibold text-white">{displayName}</p>
+                      <p className="text-xs text-pink-100 font-mono">{account.address.slice(0, 6)}...{account.address.slice(-4)}</p>
                     </div>
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"></div>
+                    <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-polkadot-pink font-bold text-lg shadow-md">
+                      {displayName.slice(0, 1).toUpperCase()}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,15 +1,13 @@
-// src/services/socket.ts
-
 import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-export const connectSocket = (userAddress: string) => {
+export const connectSocket = (userAddress: string, username?: string) => {
     socket = io('http://localhost:3001');
 
     socket.on('connect', () => {
         console.log('Connected to server');
-        socket?.emit('register', userAddress);
+        socket?.emit('register', { address: userAddress, username });
     });
 
     return socket;
@@ -31,30 +29,29 @@ export const onReceiveMessage = (callback: (message: any) => void) => {
     socket.on('receive-message', callback);
 };
 
-export const onUserOnline = (callback: (address: string) => void) => {
+export const onUserOnline = (callback: (data: any) => void) => {
     if (!socket) return;
     socket.on('user-online', callback);
 };
 
-export const onUserOffline = (callback: (address: string) => void) => {
+export const onUserOffline = (callback: (data: any) => void) => {
     if (!socket) return;
     socket.on('user-offline', callback);
 };
 
-// Room functions
 export const createRoom = (name: string, creator: string, tokenGate?: any) => {
     if (!socket) return;
     socket.emit('create-room', { name, creator, tokenGate });
 };
 
-export const joinRoom = (roomId: string, userAddress: string) => {
+export const joinRoom = (roomId: string, userAddress: string, username?: string) => {
     if (!socket) return;
-    socket.emit('join-room', { roomId, userAddress });
+    socket.emit('join-room', { roomId, userAddress, username });
 };
 
-export const leaveRoom = (roomId: string, userAddress: string) => {
+export const leaveRoom = (roomId: string, userAddress: string, username?: string) => {
     if (!socket) return;
-    socket.emit('leave-room', { roomId, userAddress });
+    socket.emit('leave-room', { roomId, userAddress, username });
 };
 
 export const getRoomInfo = (roomId: string) => {
@@ -62,11 +59,12 @@ export const getRoomInfo = (roomId: string) => {
     socket.emit('get-room', roomId);
 };
 
-export const sendRoomMessage = (roomId: string, from: string, text: string) => {
+export const sendRoomMessage = (roomId: string, from: string, text: string, fromUsername?: string) => {
     if (!socket) return;
     socket.emit('send-room-message', {
         roomId,
         from,
+        fromUsername,
         text,
         timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
     });
