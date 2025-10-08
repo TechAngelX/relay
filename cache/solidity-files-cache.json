@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/xeon2035/Documents/LOCALDEV/relay/contracts/UsernameRegistry.sol": {
+      "lastModificationDate": 1759877647674,
+      "contentHash": "0a8b147c0f8e75b82b2bb1b5c1fa4435",
+      "sourceName": "contracts/UsernameRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.28"
+      ],
+      "artifacts": [
+        "UsernameRegistry"
+      ]
+    }
+  }
+}
