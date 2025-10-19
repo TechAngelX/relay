@@ -8,7 +8,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173', 
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST']
   }
 });
@@ -16,7 +16,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
-const connectedUsers = new Map<string, string>(); 
+const connectedUsers = new Map<string, string>();
 
 interface MessageData {
   to: string;
@@ -26,26 +26,31 @@ interface MessageData {
 }
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('Socket connected:', socket.id);
 
   socket.on('register', (address: string) => {
     connectedUsers.set(address, socket.id);
+    console.log(`User registered - Address: ${address}, Socket: ${socket.id}`);
+    console.log(`Total users connected: ${connectedUsers.size}`);
     io.emit('user-online', address);
   });
 
   socket.on('send-message', (data: MessageData) => {
+    console.log(`Message from ${data.from.slice(0, 10)}... to ${data.to.slice(0, 10)}...`);
     const recipientSocketId = connectedUsers.get(data.to);
-    
+
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('receive-message', {
         from: data.from,
         text: data.text,
         timestamp: data.timestamp,
-        id: Date.now().toString() 
+        id: Date.now().toString()
       });
       socket.emit('message-sent', { success: true });
+      console.log('Message delivered successfully');
     } else {
       socket.emit('message-sent', { success: false, error: 'User offline' });
+      console.log('Message failed: recipient offline');
     }
   });
 
@@ -53,6 +58,8 @@ io.on('connection', (socket) => {
     for (const [address, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
         connectedUsers.delete(address);
+        console.log(`User disconnected - Address: ${address}, Socket: ${socket.id}`);
+        console.log(`Total users connected: ${connectedUsers.size}`);
         io.emit('user-offline', address);
         break;
       }
