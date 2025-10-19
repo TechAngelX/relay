@@ -27,17 +27,17 @@ export const UsernameRegistration = ({ currentUserAddress }: { currentUserAddres
         } catch (e) {
             console.error(e);
             setStatus('');
-            setError('Registration failed. Check MetaMask for transaction errors or ensure Passet Hub is selected.');
+            setError('Registration failed. Check MetaMask or ensure Passet Hub is selected.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-white rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-semibold mb-3">Register On-Chain Username</h3>
-            <p className="text-sm text-gray-600 mb-4">
-                This step uses **MetaMask** to register your identity on the Passet Hub testnet.
+        <div className="bg-white rounded-xl p-6 shadow-lg text-gray-900">
+            <h3 className="text-xl font-semibold mb-3 text-gray-900">Register On-Chain Username</h3>
+            <p className="text-sm text-gray-700 mb-4">
+                This step uses <strong>MetaMask</strong> to register your identity on the Passet Hub testnet.
                 (Cost: ~0.001 PAS for gas fees)
             </p>
 
@@ -47,7 +47,7 @@ export const UsernameRegistration = ({ currentUserAddress }: { currentUserAddres
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Choose a username (e.g., techangelx)"
-                    className="p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-blue-500 focus:border-blue-500"
                     disabled={loading}
                 />
                 <button
