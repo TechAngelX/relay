@@ -4,36 +4,47 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { encodeAddress } from '@polkadot/util-crypto';
 
-// CORRECTED: Using the Substrate Native WSS Endpoint for API Initialization.
-// The Polkadot.js ApiPromise MUST connect to a Substrate RPC.
 const PASSET_HUB_WS_ENDPOINT = 'wss://passet-hub-paseo.ibp.network'; 
-// Paseo/Generic Substrate prefix
 const PASEO_SS58_PREFIX = 42; 
 
 let api: ApiPromise | null = null;
 
-export const connectToPolkadot = async (): Promise<ApiPromise> => {
+export const connectToPolkadot = async (): Promise<ApiPromise | null> => {
   if (api) return api;
   
-  const provider = new WsProvider(PASSET_HUB_WS_ENDPOINT);
-  api = await ApiPromise.create({ 
-    provider,
-    noInitWarn: true,
-  });
-  return api;
+  try {
+    const provider = new WsProvider(PASSET_HUB_WS_ENDPOINT, false);
+    
+    // Suppress WebSocket errors
+    provider.on('error', () => {
+      // Silently ignore WebSocket errors
+    });
+    
+    api = await ApiPromise.create({ 
+      provider,
+      noInitWarn: true,
+    });
+    
+    return api;
+  } catch (error) {
+    // API connection failed, but this is non-critical for messaging
+    return null;
+  }
 };
 
 export const connectWallet = async (): Promise<InjectedAccountWithMeta[]> => {
   const extensions = await web3Enable('Relay');
+  
   if (extensions.length === 0) {
     throw new Error('No Polkadot extension found. Please install Polkadot.js extension.');
   }
+  
   const accounts = await web3Accounts();
+  
   if (accounts.length === 0) {
-    throw new Error('No accounts found. Please create an account in Polkadot.js extension.');
+    throw new Error('No accounts found. Please create an account in Polkadot.js extension or authorise this website.');
   }
   
-  // Format addresses to the Paseo's SS58 prefix (42) for display consistency
   return accounts.map(account => ({
     ...account,
     address: encodeAddress(account.address, PASEO_SS58_PREFIX),
