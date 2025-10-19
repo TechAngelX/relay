@@ -40,6 +40,7 @@ export default function Home() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!account) return;
@@ -133,6 +134,17 @@ export default function Home() {
     }));
   };
 
+  const copyAddress = async () => {
+    if (!account) return;
+    try {
+      await navigator.clipboard.writeText(account.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   if (!account) {
     return <WalletConnect onConnect={setAccount} />;
   }
@@ -146,7 +158,13 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-700">{account.meta.name || 'Account'}</p>
-                  <p className="text-xs text-gray-500 font-mono">{account.address.slice(0, 6)}...{account.address.slice(-4)}</p>
+                  <p
+                      onClick={copyAddress}
+                      className="text-xs text-gray-500 font-mono cursor-pointer hover:text-blue-600 transition"
+                      title="Click to copy address"
+                  >
+                    {copied ? 'Copied!' : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"></div>
               </div>

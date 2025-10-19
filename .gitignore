@@ -1,13 +1,17 @@
 # Dependencies
-node_modules
-server/node_modules
+node_modules/
+server/node_modules/
+.idea/
 
 # Build artifacts
-.next
-dist
-server/dist
+.next/
+dist/
+server/dist/
 
 # Logs and OS files
 *.log
-.DS_Store
 npm-debug.log
+.DS_Store
+.workspace.xml
+# Folders to ignore
+nonuploadable/
