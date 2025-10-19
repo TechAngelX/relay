@@ -1,7 +1,7 @@
 cat > README.md << 'EOF'
 # Relay - Polkadot Web3 Communication Platform
 
-![Relay App Screenshot](./public/images/screenshot1.png)
+![Relay App Screenshot](/Users/xeon2035/Documents/LOCALDEV/relay/public/images/screenshot1.png)
 
 ## Overview
 
