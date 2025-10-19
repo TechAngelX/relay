@@ -5,32 +5,69 @@ import { useState } from 'react';
 import { connectWallet, connectToPolkadot } from '../services/polkadot';
 import { getSocket } from '../services/socket';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
+import { decodeAddress, evmToAddress, addressToEvm } from '@polkadot/util-crypto';
+import { u8aToHex } from '@polkadot/util';
 
 interface Account extends InjectedAccountWithMeta {}
+
+// Use the Polkadot utility to get the H160 (EVM) address from the SS58 address.
+const ss58ToEvmAddress = (ss58Address: string): string => {
+    try {
+        // addressToEvm converts a 32-byte SS58 public key to a 20-byte H160 EVM address.
+        // It's the standard utility for this mapping.
+        const evmBytes = addressToEvm(ss58Address);
+        return u8aToHex(evmBytes);
+    } catch (e) {
+        console.error("Failed to convert SS58 to EVM:", e);
+        // If conversion fails (e.g., bad address), return a fallback
+        return '0x0000000000000000000000000000000000000000'; 
+    }
+};
 
 export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [permissionError, setPermissionError] = useState('');
 
   const handleConnect = async () => {
+    setLoading(true);
+    setError('');
+    setPermissionError('');
+
+    // CRITICAL FIX: Retain delay for reliable extension pop-up
+    await new Promise(resolve => setTimeout(resolve, 50)); 
+
     try {
-      setLoading(true);
-      setError('');
-      
       await connectToPolkadot();
       const accounts = await connectWallet();
       
       if (accounts.length > 0) {
         const account = accounts[0] as Account;
         
+        // 1. Convert the SS58 address to the EVM address (0x...)
+        const evmAddress = ss58ToEvmAddress(account.address);
+
+        // 2. Register the EVM address with the server for routing
         const socket = getSocket();
         socket.connect();
-        socket.emit('register', account.address);
+        socket.emit('register', evmAddress); 
         
-        onConnect(account);
+        // 3. Update the account object with the EVM address for display/routing
+        const evmAccount = { ...account, address: evmAddress };
+        onConnect(evmAccount); 
+      } else {
+        setPermissionError('No accounts found. Please check the Polkadot.js extension and ensure accounts are visible.');
       }
     } catch (err) {
-      setError((err as Error).message || 'Failed to connect wallet.');
+      const message = (err as Error).message;
+      if (message.includes('No Polkadot extension found')) {
+         setError('No Polkadot extension found. Please install Polkadot.js extension.');
+      } else if (message.includes('denied')) {
+        setPermissionError('Wallet connection denied. Please approve the request in the Polkadot.js extension popup or window.');
+      }
+      else {
+        setError(message || 'Failed to connect wallet.');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,11 +85,12 @@ export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => 
           disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Connecting...' : '🔗 Connect Wallet'}
+          {loading ? 'Awaiting Extension...' : '🔗 Connect Wallet'}
         </button>
-        {error && (
+        {(error || permissionError) && (
           <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            <p className="text-sm">{error}</p>
+            <p className="font-semibold text-sm">Connection Error</p>
+            <p className="text-sm">{error || permissionError}</p>
           </div>
         )}
         <div className="mt-8 pt-6 border-t border-gray-200">
