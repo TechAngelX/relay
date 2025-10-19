@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="118c861a-4f83-4c1e-a259-e5e2e94d0e7f" name="Changes" comment="feat: containerized with docker" />
+    <list default="true" id="118c861a-4f83-4c1e-a259-e5e2e94d0e7f" name="Changes" comment="fix: update dependencies to correct versions" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -75,7 +75,7 @@
       <workItem from="1760812045608" duration="1000" />
       <workItem from="1760812079023" duration="890000" />
       <workItem from="1760813815828" duration="351000" />
-      <workItem from="1760814221606" duration="7688000" />
+      <workItem from="1760814221606" duration="20130000" />
     </task>
     <task id="LOCAL-00001" summary="feat: Update direct dependencies and resolve package.json structure error">
       <option name="closed" value="true" />
@@ -98,6 +98,11 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/next.config.js" />
+      </list>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: Update direct dependencies and resolve package.json structure error" />
