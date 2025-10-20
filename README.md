@@ -85,7 +85,7 @@ Relay uses a **dual-wallet architecture** for different purposes:
 **Frontend:**
 - React 19 + TypeScript
 - Vite
-- Tailwind CSS
+- Tailwind CSS 4
 - React Router
 
 **Web3:**
