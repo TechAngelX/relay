@@ -10,7 +10,7 @@ import { UsernameRegistration } from "./components/UsernameRegistration";
 import { getSocket } from "./services/socket";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { v4 as uuidv4 } from "uuid";
-import DarkModeToggle from "./context/DarkModeToggle";  
+import DarkModeToggle from "./context/DarkModeToggle";
 
 const WalletConnect = dynamic(
     () => import("./components/WalletConnect").then((mod) => mod.WalletConnect),
@@ -53,7 +53,6 @@ export default function Home() {
   // --- Socket setup
   useEffect(() => {
     if (!account) return;
-
     const socket = getSocket();
 
     const handleReceiveMessage = (data: {
@@ -79,25 +78,14 @@ export default function Home() {
       );
     };
 
-    const handleMessageSent = (res: { success: boolean; error?: string }) => {
-      if (!res.success) console.warn("Message delivery failed:", res.error);
-    };
-
     socket.on("receive-message", handleReceiveMessage);
-    socket.on("message-sent", handleMessageSent);
-
-    return () => {
-      socket.off("receive-message", handleReceiveMessage);
-      socket.off("message-sent", handleMessageSent);
-    };
+    return () => socket.off("receive-message", handleReceiveMessage);
   }, [account]);
 
-  // --- Add new contact
   const handleAddContact = (address: string, name: string) => {
     setContacts((prev) => [{ address, name, online: false }, ...prev]);
   };
 
-  // --- Send message
   const handleSendMessage = (text: string) => {
     if (!account || !selectedContact) return;
 
@@ -133,7 +121,6 @@ export default function Home() {
     );
   };
 
-  // --- Copy wallet address
   const copyAddress = async () => {
     if (!account) return;
     try {
@@ -145,37 +132,37 @@ export default function Home() {
     }
   };
 
-  // --- Initial “Connect Wallet” screen (no header, no toggle)
+  // --- BEFORE connect: wallet UI only
   if (!account) {
     return <WalletConnect onConnect={setAccount} />;
   }
 
-  // --- Main UI after connect (header + dark-mode toggle)
+  // --- AFTER connect: show header + app
   return (
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-        <header className="bg-white/90 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 backdrop-blur">
-          <div className="px-6 py-3 flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Relay</h1>
-            <div className="flex items-center gap-3">
-              <DarkModeToggle />
-              <div className="text-right">
-                <p className="text-sm font-medium">
-                  {account.meta.name || "Account"}
-                </p>
-                <p
-                    onClick={copyAddress}
-                    className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition"
-                    title="Click to copy"
-                >
-                  {copied
-                      ? "Copied!"
-                      : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
-                </p>
-              </div>
+
+        {/* ✅ Top bar only AFTER connect */}
+        <header className="bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-semibold">Relay</h1>
+          <div className="flex items-center gap-3">
+            <DarkModeToggle />
+            <div className="text-right">
+              <p className="text-sm font-medium">
+                {account.meta.name || "Account"}
+              </p>
+              <p
+                  onClick={copyAddress}
+                  className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition"
+              >
+                {copied
+                    ? "Copied!"
+                    : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
+              </p>
             </div>
           </div>
         </header>
 
+        {/* ✅ Main UI */}
         <div className="flex-1 flex overflow-hidden">
           {/* Contact List */}
           <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">

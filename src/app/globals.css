@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+/* Default theme (light) */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+/* Dark theme — activates when `.dark` is on <html> */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +19,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background 0.3s, color 0.3s;
 }
