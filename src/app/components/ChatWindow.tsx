@@ -1,8 +1,6 @@
 // src/app/components/ChatWindow.tsx
 'use client';
 
-import { useState } from 'react';
-
 interface Message {
   id: string;
   text: string;
@@ -14,100 +12,71 @@ interface Message {
 interface Contact {
   address: string;
   name: string;
-  online?: boolean;
 }
 
-interface ChatWindowProps {
+export default function ChatWindow({
+                                     contact,
+                                     messages,
+                                     onSendMessage,
+                                     currentUserAddress,
+                                   }: {
   contact: Contact | null;
   messages: Message[];
   onSendMessage: (text: string) => void;
   currentUserAddress: string;
-}
-
-export const ChatWindow = ({ contact, messages, onSendMessage }: ChatWindowProps) => {
-  const [messageText, setMessageText] = useState('');
-
-  const handleSend = () => {
-    if (messageText.trim()) {
-      onSendMessage(messageText);
-      setMessageText('');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+}) {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const input = e.currentTarget.elements.namedItem("message") as HTMLInputElement;
+    const text = input.value.trim();
+    if (text) {
+      onSendMessage(text);
+      input.value = "";
     }
   };
 
   if (!contact) {
     return (
-        <div className="flex-1 flex items-center justify-center bg-gray-50 text-gray-900">
-          <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-4 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-              <span className="text-6xl">💬</span>
-            </div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Welcome to Relay</h2>
-            <p className="text-gray-700">Select a contact to start chatting</p>
-          </div>
+        <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-500 dark:text-gray-400">
+          Select a contact to start chatting
         </div>
     );
   }
 
   return (
-      <div className="flex-1 flex flex-col bg-gray-50 text-gray-900">
-        <div className="bg-white border-b p-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
-                {contact.name.charAt(0).toUpperCase()}
+      <div className="flex flex-col flex-1 bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((msg) => (
+              <div
+                  key={msg.id}
+                  className={`p-3 rounded-lg max-w-md ${
+                      msg.isMine
+                          ? "bg-blue-600 dark:bg-[var(--color-darkaccent)] text-white self-end ml-auto"
+                          : "bg-gray-200 dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-100"
+                  }`}
+              >
+                <p>{msg.text}</p>
+                <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">{msg.timestamp}</p>
               </div>
-              {contact.online && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>}
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{contact.name}</h3>
-              <p className="text-xs text-gray-600">{contact.address.slice(0, 8)}...{contact.address.slice(-6)}</p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 ? (
-              <div className="text-center text-gray-600 mt-8">
-                <p>No messages yet. Say hello! 👋</p>
-              </div>
-          ) : (
-              messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMine ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 border border-gray-200'}`}>
-                      <p className="break-words">{message.text}</p>
-                      <p className={`text-xs mt-1 ${message.isMine ? 'text-blue-100' : 'text-gray-500'}`}>{message.timestamp}</p>
-                    </div>
-                  </div>
-              ))
-          )}
-        </div>
-
-        <div className="bg-white border-t p-4">
-          <div className="flex gap-2">
-            <input
-                type="text"
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-full text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-                onClick={handleSend}
-                disabled={!messageText.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full w-12 h-12 flex items-center justify-center transition"
-            >
-              ➤
-            </button>
-          </div>
-        </div>
+        <form
+            onSubmit={handleSubmit}
+            className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2 bg-white dark:bg-[var(--color-darkcard)]"
+        >
+          <input
+              name="message"
+              placeholder="Type a message..."
+              className="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 focus:ring-[var(--color-darkaccent)] focus:outline-none"
+          />
+          <button
+              type="submit"
+              className="px-4 py-2 bg-[var(--color-darkaccent)] text-white rounded-lg hover:opacity-90 transition"
+          >
+            Send
+          </button>
+        </form>
       </div>
   );
-};
+}

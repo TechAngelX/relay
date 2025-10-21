@@ -1,27 +1,46 @@
+/* src/styles/global.css */
 @import "tailwindcss";
 
-/* Default theme (light) */
+@theme {
+  --color-darkbg: #0e0f14;
+  --color-darkcard: #1a1b23;
+  --color-darkaccent: #b983ff;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light dark;
 }
 
-/* Dark theme — activates when `.dark` is on <html> */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  background-color: var(--color-darkbg);
+  color: rgb(229 231 235);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.bg-darkbg {
+  background-color: var(--color-darkbg);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  transition: background 0.3s, color 0.3s;
+.bg-darkcard {
+  background-color: var(--color-darkcard);
+}
+
+.text-darkaccent {
+  color: var(--color-darkaccent);
+}
+
+input,
+textarea,
+select {
+  background-color: var(--color-darkcard);
+  color: rgb(229 231 235);
+  border: 1px solid rgb(55 65 81);
+}
+
+button {
+  background-color: var(--color-darkaccent);
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
 }

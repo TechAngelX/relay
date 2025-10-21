@@ -1,12 +1,12 @@
 // src/app/components/WalletConnect.tsx
 'use client';
 
-import { useState } from 'react';
-import { connectWallet } from '../services/polkadot';
-import { getSocket } from '../services/socket';
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
-import { addressToEvm } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
+import { useState } from "react";
+import { connectWallet } from "../services/polkadot";
+import { getSocket } from "../services/socket";
+import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { addressToEvm } from "@polkadot/util-crypto";
+import { u8aToHex } from "@polkadot/util";
 
 interface Account extends InjectedAccountWithMeta {}
 
@@ -16,17 +16,17 @@ const ss58ToEvmAddress = (ss58Address: string): string => {
     return u8aToHex(evmBytes);
   } catch (e) {
     console.error("Failed to convert SS58 to EVM:", e);
-    return '0x0000000000000000000000000000000000000000';
+    return "0x0000000000000000000000000000000000000000";
   }
 };
 
-export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => void }) => {
+export default function WalletConnect({ onConnect }: { onConnect: (account: Account) => void }) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleConnect = async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const accounts = await connectWallet();
@@ -35,20 +35,20 @@ export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => 
         const evmAddress = ss58ToEvmAddress(account.address);
         const socket = getSocket();
         socket.connect();
-        socket.on('connect', () => socket.emit('register', evmAddress));
+        socket.on("connect", () => socket.emit("register", evmAddress));
         const evmAccount = { ...account, address: evmAddress };
         onConnect(evmAccount);
       } else {
-        setError('No accounts found in extension.');
+        setError("No accounts found in extension.");
       }
     } catch (err) {
       const message = (err as Error).message;
-      if (message.includes('No Polkadot extension found')) {
-        setError('No Polkadot extension found. Please install Polkadot.js extension.');
-      } else if (message.includes('denied')) {
-        setError('Connection denied. Please approve in Polkadot.js extension.');
+      if (message.includes("No Polkadot extension found")) {
+        setError("No Polkadot extension found. Please install Polkadot.js extension.");
+      } else if (message.includes("denied")) {
+        setError("Connection denied. Please approve in Polkadot.js extension.");
       } else {
-        setError(message || 'Failed to connect wallet.');
+        setError(message || "Failed to connect wallet.");
       }
     } finally {
       setLoading(false);
@@ -56,36 +56,36 @@ export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => 
   };
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4 text-gray-900">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 dark:from-[var(--color-darkbg)] dark:to-[var(--color-darkcard)] p-4 text-gray-900 dark:text-gray-200 transition-colors duration-300">
+        <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-2xl shadow-2xl p-8 max-w-md w-full transition-colors duration-300">
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-2 text-gray-900">Relay</h1>
-            <p className="text-gray-700">Web3 Communication</p>
+            <h1 className="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100">Relay</h1>
+            <p className="text-gray-700 dark:text-gray-300">Web3 Communication</p>
           </div>
 
           <button
               onClick={handleConnect}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 dark:bg-[var(--color-darkaccent)] hover:bg-blue-700 dark:hover:opacity-90 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Connecting...' : 'Connect Wallet'}
+            {loading ? "Connecting..." : "Connect Wallet"}
           </button>
 
           {error && (
-              <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-300">
                 <p className="font-semibold text-sm">Connection Error</p>
                 <p className="text-sm">{error}</p>
               </div>
           )}
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-700 text-center">
-              Don't have a wallet?{' '}
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
+              Don't have a wallet?{" "}
               <a
                   href="https://polkadot.js.org/extension/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline font-medium"
+                  className="text-blue-600 dark:text-[var(--color-darkaccent)] hover:underline font-medium"
               >
                 Install Polkadot.js Extension
               </a>
@@ -94,4 +94,4 @@ export const WalletConnect = ({ onConnect }: { onConnect: (account: Account) => 
         </div>
       </div>
   );
-};
+}
