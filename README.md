@@ -1,11 +1,21 @@
 cat > README.md << 'EOF'
 # Relay - Polkadot Web3 Communication Platform
+Polkadot-first, Ethereum-friendly
+
+The chat & identity system is built on Polkadot’s tech stack,
+but can recognize and onboard users from the Ethereum world
+using the EVM compatibility layer
 
 ![Relay App Screenshot](/Users/xeon2035/Documents/LOCALDEV/relay/public/images/screenshot1.png)
 
 ## Overview
 
 **Relay** is a decentralized Web3 communication platform built on the Polkadot ecosystem. It enables secure, wallet-based messaging, video calls, and group rooms without requiring traditional authentication systems. Your wallet is your identity.
+
+A Decentralised cross-ecosystem Web3 chat/ communication app built on Polkadot Blockchain
+
+Runs natively on Polkadot (Substrate / PolkaVM)
+But seamlessly onboard Ethereum users (MetaMask)
 
 ## How It Works
 
