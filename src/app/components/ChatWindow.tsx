@@ -37,14 +37,14 @@ export default function ChatWindow({
 
   if (!contact) {
     return (
-        <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-500 dark:text-gray-400">
-          Select a contact to start chatting
+        <div className="flex flex-col flex-1 bg-gray-50 dark:bg-[var(--color-darkbg)] shadow-elevated transition-all">
+            Select a contact to start chatting
         </div>
     );
   }
 
-  return (
-      <div className="flex flex-col flex-1 bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200">
+    return (
+        <div className="flex flex-col flex-1 bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200">
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.map((msg) => (
               <div

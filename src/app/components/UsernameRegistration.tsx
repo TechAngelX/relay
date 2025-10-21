@@ -27,22 +27,31 @@ export default function UsernameRegistration({
     };
 
     return (
-        <div className="bg-white dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-200 p-4 rounded-lg shadow transition-colors duration-300">
-            <h2 className="font-semibold mb-2">Register On-Chain Username</h2>
+        <div className="bg-white dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-200 p-4 rounded-xl shadow-elevated transition-all duration-300">
+            <h2 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                Register On-Chain Username
+            </h2>
+
             <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 mb-3 rounded-lg bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 border border-gray-300 dark:border-gray-700 focus:ring-[var(--color-darkaccent)]"
                 placeholder="Enter username"
+                className="w-full p-2.5 mb-4 rounded-lg bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-[var(--color-darkaccent)] focus:outline-none transition-all"
             />
+
             <button
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full p-2 bg-[var(--color-darkaccent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition"
+                className="w-full p-2.5 rounded-lg font-medium bg-[var(--color-darkaccent)] text-white hover:opacity-90 disabled:opacity-50 transition-all duration-300"
             >
                 {loading ? "Registering..." : "Register"}
             </button>
-            {error && <p className="text-sm text-red-600 dark:text-red-400 mt-2">{error}</p>}
+
+            {error && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-3 transition-colors duration-300">
+                    {error}
+                </p>
+            )}
         </div>
     );
 }

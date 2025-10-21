@@ -56,8 +56,9 @@ export default function WalletConnect({ onConnect }: { onConnect: (account: Acco
   };
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 dark:from-[var(--color-darkbg)] dark:to-[var(--color-darkcard)] p-4 text-gray-900 dark:text-gray-200 transition-colors duration-300">
-        <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-2xl shadow-2xl p-8 max-w-md w-full transition-colors duration-300">
+      <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-2xl p-8 max-w-md w-full shadow-elevated transition-all">
+        <div
+            className="bg-white dark:bg-[var(--color-darkcard)] rounded-2xl shadow-2xl p-8 max-w-md w-full transition-colors duration-300">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100">Relay</h1>
             <p className="text-gray-700 dark:text-gray-300">Web3 Communication</p>

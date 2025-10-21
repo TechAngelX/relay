@@ -21,10 +21,10 @@ export default function ContactList({
     onAddContact: () => void;
 }) {
     return (
-        <div className="flex flex-col h-full bg-gray-100 dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
+        <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] shadow-elevated transition-all">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold">Chats</h2>
+            <h2 className="text-lg font-semibold">Chats</h2>
                 <button
                     onClick={onAddContact}
                     className="text-lg font-bold rounded-full bg-[var(--color-darkaccent)] text-white w-7 h-7 flex items-center justify-center hover:opacity-90 transition"

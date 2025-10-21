@@ -29,7 +29,7 @@ export default function AddContactModal({
 
   return (
       <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-        <div className="bg-white dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-200 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="p-4 rounded-xl bg-white dark:bg-[var(--color-darkcard)] shadow-elevated">
           <h2 className="text-xl font-semibold mb-4">Add Contact</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">

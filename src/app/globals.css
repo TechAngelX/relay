@@ -1,21 +1,106 @@
-/* src/styles/global.css */
+/* src/app/globals.css */
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* === THEME TOKENS === */
 @theme {
   --color-darkbg: #0e0f14;
   --color-darkcard: #1a1b23;
   --color-darkaccent: #b983ff;
+  --color-lightbg: #f9fafb;
+  --color-lightcard: #ffffff;
+  --color-lightaccent: #9b6bff;
 }
 
+/* === BASE === */
 :root {
   color-scheme: light dark;
+  background-color: var(--color-lightbg);
+  color: #111827;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-hover-color: rgba(0, 0, 0, 0.12);
 }
 
 .dark {
   background-color: var(--color-darkbg);
   color: rgb(229 231 235);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-hover-color: rgba(0, 0, 0, 0.6);
 }
 
+/* === GLOBAL ELEVATION TOKENS === */
+:root {
+  --elevation-low: 0 1px 3px var(--shadow-color);
+  --elevation-medium: 0 4px 12px var(--shadow-color), 0 2px 4px var(--shadow-color);
+  --elevation-high: 0 8px 24px var(--shadow-color), 0 4px 12px var(--shadow-color);
+}
+
+.dark {
+  --elevation-low: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --elevation-medium: 0 4px 12px rgba(0, 0, 0, 0.7);
+  --elevation-high: 0 8px 24px rgba(0, 0, 0, 0.75);
+}
+
+/* === COMPONENT UTILS === */
+.shadow-low {
+  box-shadow: var(--elevation-low);
+  transition: box-shadow 0.3s ease;
+}
+
+.shadow-elevated {
+  box-shadow: var(--elevation-medium);
+  transition: box-shadow 0.3s ease;
+}
+
+.shadow-elevated:hover {
+  box-shadow: var(--elevation-high);
+}
+
+/* === INPUTS === */
+input,
+textarea,
+select {
+  background-color: #f3f4f6; /* light gray for light mode */
+  color: #111827;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-lightaccent);
+  outline: none;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--color-darkcard);
+  color: rgb(229 231 235);
+  border: 1px solid rgb(55 65 81);
+}
+
+/* === BUTTONS === */
+button {
+  background-color: var(--color-lightaccent);
+  color: white;
+  border-radius: 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.dark button {
+  background-color: var(--color-darkaccent);
+}
+
+/* === GENERAL === */
 .bg-darkbg {
   background-color: var(--color-darkbg);
 }
@@ -28,19 +113,6 @@
   color: var(--color-darkaccent);
 }
 
-input,
-textarea,
-select {
-  background-color: var(--color-darkcard);
-  color: rgb(229 231 235);
-  border: 1px solid rgb(55 65 81);
-}
-
-button {
-  background-color: var(--color-darkaccent);
-  color: white;
-}
-
-button:hover {
-  opacity: 0.9;
+html {
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
