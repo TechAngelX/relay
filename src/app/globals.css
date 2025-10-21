@@ -1,21 +1,28 @@
-/* src/styles/global.css */
+/* src/app/global.css */
 @import "tailwindcss";
 
+/* Tailwind v4 dark variant */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Theme colors */
 @theme {
   --color-darkbg: #0e0f14;
   --color-darkcard: #1a1b23;
   --color-darkaccent: #b983ff;
 }
 
+/* Default color scheme */
 :root {
   color-scheme: light dark;
 }
 
+/* Dark mode base */
 .dark {
   background-color: var(--color-darkbg);
   color: rgb(229 231 235);
 }
 
+/* Background helpers */
 .bg-darkbg {
   background-color: var(--color-darkbg);
 }
@@ -24,23 +31,82 @@
   background-color: var(--color-darkcard);
 }
 
+/* Accent text */
 .text-darkaccent {
   color: var(--color-darkaccent);
 }
 
+/* Unified input + form styling */
 input,
 textarea,
 select {
+  background-color: rgb(245 246 248);       /* soft gray for light mode */
+  color: rgb(17 24 39);                     /* text-gray-900 */
+  border: 1px solid rgb(229 231 235);       /* border-gray-200 */
+  border-radius: 0.5rem;                    /* rounded-lg */
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* Focus ring */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-darkaccent);
+  box-shadow: 0 0 0 2px var(--color-darkaccent)40;
+}
+
+/* Dark mode adjustment */
+.dark input,
+.dark textarea,
+.dark select {
   background-color: var(--color-darkcard);
   color: rgb(229 231 235);
   border: 1px solid rgb(55 65 81);
 }
 
+/* Buttons */
 button {
   background-color: var(--color-darkaccent);
   color: white;
+  border-radius: 0.5rem;
+  transition: opacity 0.3s, background-color 0.3s;
 }
 
 button:hover {
   opacity: 0.9;
+}
+
+/* Smooth transitions for theme switching */
+html,
+body,
+div,
+section,
+header,
+footer,
+button,
+input,
+textarea {
+  transition:
+          background-color 0.4s ease,
+          border-color 0.4s ease,
+          color 0.4s ease,
+          fill 0.4s ease,
+          stroke 0.4s ease;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  div,
+  section,
+  header,
+  footer,
+  button,
+  input,
+  textarea {
+    transition: none !important;
+  }
 }
