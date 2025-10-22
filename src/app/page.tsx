@@ -10,7 +10,8 @@ import UsernameRegistration from "./components/UsernameRegistration";
 import { getSocket } from "./services/socket";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { v4 as uuidv4 } from "uuid";
-import DarkModeToggle from "./components/DarkModeToggle"; /* fixed path */
+import DarkModeToggle from "./components/DarkModeToggle";
+import VideoCall from "./components/VideoCall"; 
 
 const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
     ssr: false,
@@ -21,6 +22,7 @@ const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
     ),
 });
 
+// === Types ===
 type Account = InjectedAccountWithMeta;
 
 interface Contact {
@@ -39,6 +41,9 @@ interface Message {
     isMine: boolean;
 }
 
+type CallMode = "video" | "audio" | null;
+
+// === Component ===
 export default function Home() {
     const [account, setAccount] = useState<Account | null>(null);
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -46,8 +51,10 @@ export default function Home() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [isCalling, setIsCalling] = useState(false);
+    const [callMode, setCallMode] = useState<CallMode>(null);
 
-    /* --- Socket setup --- */
+    // === Socket setup ===
     useEffect(() => {
         if (!account) return;
         const socket = getSocket();
@@ -76,14 +83,15 @@ export default function Home() {
         };
 
         socket.on("receive-message", handleReceiveMessage);
-        return () => {
-            socket.off("receive-message", handleReceiveMessage);
-        };
+        return () => socket.off("receive-message", handleReceiveMessage);
     }, [account]);
+
+    // === Contact handling ===
     const handleAddContact = (address: string, name: string) => {
         setContacts((prev) => [{ address, name, online: false }, ...prev]);
     };
 
+    // === Message sending ===
     const handleSendMessage = (text: string) => {
         if (!account || !selectedContact) return;
 
@@ -109,17 +117,10 @@ export default function Home() {
             text,
             timestamp,
         });
-
-        setContacts((prev) =>
-            prev.map((c) =>
-                c.address === selectedContact.address
-                    ? { ...c, lastMessage: text, timestamp }
-                    : c
-            )
-        );
     };
 
-    const copyAddress = async () => {
+    // === Copy wallet address ===
+    const copyAddress = async (): Promise<void> => {
         if (!account) return;
         try {
             await navigator.clipboard.writeText(account.address);
@@ -130,23 +131,18 @@ export default function Home() {
         }
     };
 
-    /* --- BEFORE connect: wallet UI only --- */
-    if (!account) {
-        return <WalletConnect onConnect={setAccount} />;
-    }
+    // === UI ===
+    if (!account) return <WalletConnect onConnect={setAccount} />;
 
-    /* --- AFTER connect: show header + app --- */
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
-            {/* Top bar only AFTER connect */}
+            {/* === Header === */}
             <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between">
                 <h1 className="text-lg font-semibold">Relay</h1>
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">
-                            {account.meta.name || "Account"}
-                        </p>
+                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"
@@ -159,9 +155,9 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* Main UI */}
+            {/* === Main content === */}
             <div className="flex-1 flex overflow-hidden">
-                {/* Contact List */}
+                {/* === Contact List === */}
                 <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] transition-colors duration-300">
                     <ContactList
                         contacts={contacts}
@@ -174,7 +170,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Chat Window */}
+                {/* === Chat Window === */}
                 <ChatWindow
                     contact={selectedContact}
                     messages={messages.filter(
@@ -184,15 +180,39 @@ export default function Home() {
                     )}
                     onSendMessage={handleSendMessage}
                     currentUserAddress={account.address}
+                    onStartCall={(mode) => {
+                        setCallMode(mode);
+                        setIsCalling(true);
+                    }}
                 />
             </div>
 
-            {/* Add Contact Modal */}
+            {/* === Add Contact Modal === */}
             <AddContactModal
                 isOpen={isAddContactModalOpen}
                 onClose={() => setIsAddContactModalOpen(false)}
                 onAddContact={handleAddContact}
             />
+
+            {/* === Video / Audio Call Modal === */}
+            {isCalling && selectedContact && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+                    <VideoCall
+                        userId={account.address}
+                        remoteId={selectedContact.address}
+                        mode={callMode || "video"}
+                    />
+                    <button
+                        onClick={() => {
+                            setIsCalling(false);
+                            setCallMode(null);
+                        }}
+                        className="absolute top-5 right-5 bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
+                    >
+                        ✖ End
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

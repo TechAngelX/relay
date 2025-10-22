@@ -6,6 +6,13 @@ The chat & identity system is built on Polkadot’s tech stack,
 but can recognize and onboard users from the Ethereum world
 using the EVM compatibility layer
 
+That means later, your app can:
+
+Let you sign in from either wallet.
+
+Gate access to features by either EVM or Substrate assets.
+
+Or even unify their cross-chain identity for messaging.
 ![Relay App Screenshot](/Users/xeon2035/Documents/LOCALDEV/relay/public/images/screenshot1.png)
 
 ## Overview

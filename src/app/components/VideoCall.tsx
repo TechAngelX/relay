@@ -15,7 +15,7 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   const [connectedId, setConnectedId] = useState<string>('');
   const [status, setStatus] = useState<string>('Idle');
   const [isInCall, setIsInCall] = useState(false);
-  const [inputLevel, setInputLevel] = useState(0); // 🔊 mic level 0..1
+  const [inputLevel, setInputLevel] = useState(0); // mic level 0..1
 
   const localVideo = useRef<HTMLVideoElement>(null);
   const remoteVideo = useRef<HTMLVideoElement>(null);
