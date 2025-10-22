@@ -2,12 +2,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Peer from 'peerjs';
+import Peer, { MediaConnection } from 'peerjs';
 import { getSocket } from '../services/socket';
 
 interface VideoCallProps {
-  userId: string;    
-  remoteId?: string;  
+  userId: string;
+  remoteId?: string;
 }
 
 export default function VideoCall({ userId, remoteId }: VideoCallProps) {
@@ -20,7 +20,7 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   const localVideo = useRef<HTMLVideoElement>(null);
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const peerRef = useRef<Peer>();
-  const currentCall = useRef<Peer.MediaConnection>();
+  const currentCall = useRef<MediaConnection>();
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
