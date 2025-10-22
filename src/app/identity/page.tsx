@@ -1,5 +1,11 @@
 // src/app/identity/page.tsx
-import LinkIdentity from "../components/LinkIdentity";
+"use client";
+
+import dynamic from "next/dynamic";
+
+const LinkIdentity = dynamic(() => import("../components/LinkIdentity"), {
+    ssr: false,
+});
 
 export default function IdentityPage() {
     return (

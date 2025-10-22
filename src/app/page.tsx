@@ -11,7 +11,7 @@ import { getSocket } from "./services/socket";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { v4 as uuidv4 } from "uuid";
 import DarkModeToggle from "./components/DarkModeToggle";
-import VideoCall from "./components/VideoCall"; 
+import VideoCall from "./components/VideoCall";
 
 const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
     ssr: false,
@@ -56,7 +56,7 @@ export default function Home() {
 
     // === Socket setup ===
     useEffect(() => {
-        if (!account) return;
+        if (!account) return () => {}; // ✅ always return a cleanup
         const socket = getSocket();
 
         const handleReceiveMessage = (data: {

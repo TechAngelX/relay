@@ -8,6 +8,8 @@ import { getSocket } from '../services/socket';
 interface VideoCallProps {
   userId: string;
   remoteId?: string;
+  mode: "video" | "audio"; 
+
 }
 
 export default function VideoCall({ userId, remoteId }: VideoCallProps) {

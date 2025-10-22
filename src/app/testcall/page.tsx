@@ -9,7 +9,7 @@ export default function TestCallPage() {
       <h1 className="text-2xl font-bold mb-6">Peer-to-Peer Video Call Test</h1>
 
       {/* 👇 Change these manually to simulate two users */}
-      <VideoCall userId="userA" remoteId="userB" />
+        <VideoCall userId="userA" remoteId="userB" mode="audio" />
     </div>
   );
 }
