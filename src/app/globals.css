@@ -1,27 +1,37 @@
 /* src/app/globals.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", system-ui, sans-serif;
-}
+
+/* === FONT IMPORT === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* === TAILWIND CORE === */
+@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* === THEME TOKENS === */
+/* === THEME === */
 @theme {
-  --color-darkbg: #0e0f14;
-  --color-darkcard: #1a1b23;
-  --color-darkaccent: #b983ff;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* LIGHT MODE */
   --color-lightbg: #f9fafb;
   --color-lightcard: #ffffff;
-  --color-lightaccent: #9b6bff;
+  --color-lightaccent: #8c5eff;
+
+  /* DARK MODE — DEEPER CONTRAST */
+  --color-darkbg: #0b0c10;
+  --color-darkcard: #161720;
+  --color-darkaccent: #a770ff; /* vivid violet-blue */
+  --color-darkaccent-hover: #c28aff;
+
+  --radius-md: 0.5rem;
+  --transition-fast: 0.25s ease;
 }
 
 /* === BASE === */
-
 :root {
   color-scheme: light dark;
+  font-family: var(--font-sans);
   background-color: var(--color-lightbg);
   color: #111827;
   --shadow-color: rgba(0, 0, 0, 0.08);
@@ -30,55 +40,50 @@
 
 .dark {
   background-color: var(--color-darkbg);
-  color: rgb(229 231 235);
-  --shadow-color: rgba(0, 0, 0, 0.4);
-  --shadow-hover-color: rgba(0, 0, 0, 0.6);
+  color: rgb(236 238 243);
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --shadow-hover-color: rgba(0, 0, 0, 0.7);
 }
 
-/* === GLOBAL ELEVATION TOKENS === */
+/* === ELEVATION === */
 :root {
   --elevation-low: 0 1px 3px var(--shadow-color);
-  --elevation-medium: 0 4px 12px var(--shadow-color), 0 2px 4px var(--shadow-color);
-  --elevation-high: 0 8px 24px var(--shadow-color), 0 4px 12px var(--shadow-color);
+  --elevation-medium: 0 4px 10px var(--shadow-color);
+  --elevation-high: 0 8px 20px var(--shadow-color);
 }
 
-.dark {
-  --elevation-low: 0 1px 3px rgba(0, 0, 0, 0.6);
-  --elevation-medium: 0 4px 12px rgba(0, 0, 0, 0.7);
-  --elevation-high: 0 8px 24px rgba(0, 0, 0, 0.75);
-}
-
-/* === COMPONENT UTILS === */
 .shadow-low {
-  box-shadow: var(--elevation-low); 
-  transition: box-shadow 0.3s ease;
+  box-shadow: var(--elevation-low);
+  transition: box-shadow var(--transition-fast);
 }
-/* Stronger shadows for clarity */
+
 .shadow-elevated {
   box-shadow:
-          0 8px 24px rgba(0, 0, 0, 0.18),
-          0 4px 12px rgba(0, 0, 0, 0.12);
+          0 8px 22px rgba(0, 0, 0, 0.15),
+          0 4px 10px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .shadow-elevated:hover {
   box-shadow:
-          0 12px 32px rgba(0, 0, 0, 0.22),
-          0 6px 18px rgba(0, 0, 0, 0.15);
+          0 12px 28px rgba(0, 0, 0, 0.22),
+          0 6px 16px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
-
-/* === INPUTS === */
+/* === FORMS === */
 input,
 textarea,
 select {
-  background-color: #f3f4f6; /* light gray for light mode */
+  font-family: var(--font-sans);
+  background-color: #f3f4f6;
   color: #111827;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  transition: background-color var(--transition-fast),
+  border-color var(--transition-fast),
+  color var(--transition-fast);
 }
 
 input:focus,
@@ -93,43 +98,43 @@ select:focus {
 .dark select {
   background-color: var(--color-darkcard);
   color: rgb(229 231 235);
-  border: 1px solid rgb(55 65 81);
+  border: 1px solid rgb(72 80 100);
 }
 
 /* === BUTTONS === */
 button {
+  font-family: var(--font-sans);
   background-color: var(--color-lightaccent);
   color: white;
-  border-radius: 0.5rem;
-  transition: opacity 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
 }
 
 button:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+  transform: translateY(-1px);
 }
 
 .dark button {
   background-color: var(--color-darkaccent);
 }
 
+.dark button:hover {
+  background-color: var(--color-darkaccent-hover);
+}
+
 /* === GENERAL === */
-.bg-darkbg {
-  background-color: var(--color-darkbg);
-}
-
-.bg-darkcard {
-  background-color: var(--color-darkcard);
-}
-
-.text-darkaccent {
-  color: var(--color-darkaccent);
-}
+.bg-darkbg { background-color: var(--color-darkbg); }
+.bg-darkcard { background-color: var(--color-darkcard); }
+.text-darkaccent { color: var(--color-darkaccent); }
 
 html {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Audio Level Meter */
+/* === AUDIO METER === */
 .audio-meter {
   display: flex;
   gap: 2px;
