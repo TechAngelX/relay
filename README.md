@@ -107,7 +107,9 @@ Relay uses a **dual-wallet architecture** for different purposes:
 **Backend / Middleware:**
 - Next App Router
 - Node.js (/server)
-- Socket.IO
+- Socket.IO#
+- Node Express (for local dev)
+- Node Express (for production)
 
 **Web3:**
 - Polkadot.js API (Substrate wallet connection)
