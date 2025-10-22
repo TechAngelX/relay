@@ -100,10 +100,14 @@ Relay uses a **dual-wallet architecture** for different purposes:
 ## Tech Stack
 
 **Frontend:**
+- Next.js 15.5.6 (Turbopack)
 - React 19 + TypeScript
-- Vite
-- Tailwind CSS 4
-- React Router
+- Tailwind CSS 4.1
+
+**Backend / Middleware:**
+- Next App Router
+- Node.js (/server)
+- Socket.IO
 
 **Web3:**
 - Polkadot.js API (Substrate wallet connection)

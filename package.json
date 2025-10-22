@@ -2,7 +2,7 @@
   "name": "relay",
   "version": "0.1.0",
   "private": true,
-  
+  "type": "module",
   "scripts": {
     "dev": "PORT=5173 next dev --turbopack",
     "build": "next build",
@@ -13,7 +13,7 @@
     "@polkadot/api": "^16.4.9",
     "@polkadot/extension-dapp": "^0.62.2",
     "@polkadot/ui-keyring": "^3.16.1",
-    "@tailwindcss/postcss": "^4.1.14",
+    "@tailwindcss/postcss": "^4.1.15",
     "autoprefixer": "^10.4.21",
     "ethers": "^6.15.0",
     "lucide-react": "^0.546.0",
@@ -33,7 +33,7 @@
     "eslint": "^9.38.0",
     "eslint-config-next": "15.5.6",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.14",
+    "tailwindcss": "4.1.15",
     "typescript": "^5.3.3"
   }
 }
