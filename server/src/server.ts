@@ -9,7 +9,8 @@ const httpServer = createServer(app);
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://relay.techangelx.com'
+  'https://relay.techangelx.com',
+  'https://server-proud-shadow-4342.fly.dev'
 ];
 
 const io = new Server(httpServer, {
