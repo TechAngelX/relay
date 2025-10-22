@@ -122,3 +122,25 @@ button:hover {
 html {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
+
+/* Audio Level Meter */
+.audio-meter {
+  display: flex;
+  gap: 2px;
+  height: 40px;
+  background: #1e1e1e;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.audio-meter .bar {
+  flex: 1;
+  background: #333;
+  border-radius: 2px;
+  transition: background-color 0.1s, height 0.1s;
+}
+
+.audio-meter .bar.active {
+  background: linear-gradient(to top, #00ff7f, #00bfff);
+  height: 100%;
+}
