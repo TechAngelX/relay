@@ -17,12 +17,15 @@
   --color-lightbg: #f9fafb;
   --color-lightcard: #ffffff;
   --color-lightaccent: #8c5eff;
+  --color-lightaccent-hover: #7a4aff;
+  --color-lightaccent-ring: rgba(140, 94, 255, 0.4);
 
   /* DARK MODE — DEEPER CONTRAST */
   --color-darkbg: #0b0c10;
   --color-darkcard: #161720;
   --color-darkaccent: #a770ff; /* vivid violet-blue */
   --color-darkaccent-hover: #c28aff;
+  --color-darkaccent-ring: rgba(167, 112, 255, 0.5);
 
   --radius-md: 0.5rem;
   --transition-fast: 0.25s ease;
@@ -83,13 +86,15 @@ select {
   padding: 0.5rem 0.75rem;
   transition: background-color var(--transition-fast),
   border-color var(--transition-fast),
-  color var(--transition-fast);
+  color var(--transition-fast),
+  box-shadow var(--transition-fast);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--color-lightaccent);
+  box-shadow: 0 0 0 3px var(--color-lightaccent-ring);
   outline: none;
 }
 
@@ -101,6 +106,13 @@ select:focus {
   border: 1px solid rgb(72 80 100);
 }
 
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--color-darkaccent);
+  box-shadow: 0 0 0 3px var(--color-darkaccent-ring);
+}
+
 /* === BUTTONS === */
 button {
   font-family: var(--font-sans);
@@ -109,12 +121,21 @@ button {
   border-radius: var(--radius-md);
   padding: 0.5rem 1rem;
   font-weight: 500;
-  transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
+  transition: transform var(--transition-fast),
+  opacity var(--transition-fast),
+  background-color var(--transition-fast),
+  box-shadow var(--transition-fast);
 }
 
 button:hover {
   opacity: 0.95;
   transform: translateY(-1px);
+  background-color: var(--color-lightaccent-hover);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--color-lightaccent-ring);
 }
 
 .dark button {
@@ -123,6 +144,44 @@ button:hover {
 
 .dark button:hover {
   background-color: var(--color-darkaccent-hover);
+}
+
+.dark button:focus {
+  box-shadow: 0 0 0 4px var(--color-darkaccent-ring);
+}
+
+/* === LINKS === */
+a {
+  color: var(--color-lightaccent);
+  text-decoration: none;
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-lightaccent-hover);
+  text-decoration: underline;
+  text-decoration-color: var(--color-lightaccent-hover);
+}
+
+a:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-lightaccent-ring);
+  border-radius: 0.25rem;
+}
+
+.dark a {
+  color: var(--color-darkaccent);
+}
+
+.dark a:hover {
+  color: var(--color-darkaccent-hover);
+  text-decoration: underline;
+  text-decoration-color: var(--color-darkaccent-hover);
+}
+
+.dark a:focus {
+  box-shadow: 0 0 0 3px var(--color-darkaccent-ring);
+  border-radius: 0.25rem;
 }
 
 /* === GENERAL === */
