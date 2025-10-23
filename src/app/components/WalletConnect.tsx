@@ -61,25 +61,35 @@ export default function WalletConnect({ onConnect }: { onConnect: (account: Acco
         <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-3xl shadow-2xl p-10 max-w-md w-full transition-colors duration-300 flex flex-col items-center text-center">
 
           {/* === Logo Block === */}
-          <div className="flex flex-col items-center mb-10 space-y-4">
-            <Image
-                src="/images/relay-logo.svg"
-                alt="Relay logo"
-                width={68}
-                height={68}
-                className="animate-fade-in drop-shadow-lg dark:drop-shadow-[0_0_9px_rgba(185,131,255,0.4)] transition-all duration-500"
-                priority
+          <div className="flex flex-col items-center mb-8 space-y-1 group transition-all duration-500">
+            {/* Gradient chain logo */}
+            <div
+                className="w-[68px] h-[68px] bg-gradient-to-br from-[#4F00E9] to-[#00BFFF] transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
+                style={{
+                  WebkitMaskImage: 'url(/images/relay-logo.svg)',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  WebkitMaskSize: 'contain',
+                  maskImage: 'url(/images/relay-logo.svg)',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  maskSize: 'contain',
+                }}
             />
+
             <Image
                 src="/images/relay-text.svg"
                 alt="Relay text"
                 width={150}
                 height={40}
-                className="animate-fade-in delay-200 dark:invert-[0.9] transition-all duration-700"
+                className="animate-fade-in delay-200 transition-all duration-700 dark:invert-[0.9] brightness-0 saturate-100 hue-rotate-[210deg]"
                 priority
             />
+
             <p className="text-gray-700 dark:text-gray-300 text-base mt-2">Web3 Communication</p>
           </div>
+
+
 
           {/* === Connect Button === */}
           <button
@@ -87,7 +97,7 @@ export default function WalletConnect({ onConnect }: { onConnect: (account: Acco
               disabled={loading}
               className="w-full bg-blue-600 dark:bg-[var(--color-darkaccent)] hover:bg-blue-700 dark:hover:opacity-90 text-white font-semibold py-4 px-6 rounded-xl transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
-            {loading ? "Connecting..." : "Connect Wallet"}
+          {loading ? "Connecting..." : "Connect Wallet"}
           </button>
 
           {/* === Error Message === */}
