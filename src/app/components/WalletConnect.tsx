@@ -1,7 +1,8 @@
-// src/app/components/WalletConnect.tsx
+// Path: /src/app/components/WalletConnect.tsx
 'use client';
 
 import { useState } from "react";
+import Image from "next/image";
 import { connectWallet } from "../services/polkadot";
 import { getSocket } from "../services/socket";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
@@ -56,30 +57,50 @@ export default function WalletConnect({ onConnect }: { onConnect: (account: Acco
   };
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 dark:from-[var(--color-darkbg)] dark:to-[var(--color-darkcard)] p-4 text-gray-900 dark:text-gray-200 transition-colors duration-300">
-        <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-2xl shadow-2xl p-8 max-w-md w-full transition-colors duration-300">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100">Relay</h1>
-            <p className="text-gray-700 dark:text-gray-300">Web3 Communication</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 dark:from-[var(--color-darkbg)] dark:to-[var(--color-darkcard)] p-6 text-gray-900 dark:text-gray-200 transition-colors duration-300">
+        <div className="bg-white dark:bg-[var(--color-darkcard)] rounded-3xl shadow-2xl p-10 max-w-md w-full transition-colors duration-300 flex flex-col items-center text-center">
+
+          {/* === Logo Block === */}
+          <div className="flex flex-col items-center mb-10 space-y-4">
+            <Image
+                src="/images/relay-logo.svg"
+                alt="Relay logo"
+                width={68}
+                height={68}
+                className="animate-fade-in drop-shadow-lg dark:drop-shadow-[0_0_9px_rgba(185,131,255,0.4)] transition-all duration-500"
+                priority
+            />
+            <Image
+                src="/images/relay-text.svg"
+                alt="Relay text"
+                width={150}
+                height={40}
+                className="animate-fade-in delay-200 dark:invert-[0.9] transition-all duration-700"
+                priority
+            />
+            <p className="text-gray-700 dark:text-gray-300 text-base mt-2">Web3 Communication</p>
           </div>
 
+          {/* === Connect Button === */}
           <button
               onClick={handleConnect}
               disabled={loading}
-              className="w-full bg-blue-600 dark:bg-[var(--color-darkaccent)] hover:bg-blue-700 dark:hover:opacity-90 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 dark:bg-[var(--color-darkaccent)] hover:bg-blue-700 dark:hover:opacity-90 text-white font-semibold py-4 px-6 rounded-xl transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             {loading ? "Connecting..." : "Connect Wallet"}
           </button>
 
+          {/* === Error Message === */}
           {error && (
-              <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-300">
-                <p className="font-semibold text-sm">Connection Error</p>
-                <p className="text-sm">{error}</p>
+              <div className="mt-5 p-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-300 w-full text-sm">
+                <p className="font-semibold mb-1">Connection Error</p>
+                <p>{error}</p>
               </div>
           )}
 
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
+          {/* === Footer === */}
+          <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 w-full">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               Don't have a wallet?{" "}
               <a
                   href="https://polkadot.js.org/extension/"
