@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '5001', 10);
 const HOST = '0.0.0.0';
 httpServer.listen(PORT, HOST, () => {
   console.log(`Server running on ${HOST}:${PORT}`);
