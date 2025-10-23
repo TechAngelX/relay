@@ -8,7 +8,7 @@ const app = express();
 const httpServer = createServer(app);
 
 const allowedOrigins = [
-  'http://localhost:5173',
+  'http://localhost:3001',
   'https://relay.techangelx.com',
   'https://server-proud-shadow-4342.fly.dev'
 ];
@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = parseInt(process.env.PORT || '5001', 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0';
 httpServer.listen(PORT, HOST, () => {
   console.log(`Server running on ${HOST}:${PORT}`);
