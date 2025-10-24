@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -56,7 +55,7 @@ export default function Home() {
 
     // === Socket setup ===
     useEffect(() => {
-        if (!account) return () => {}; // ✅ always return a cleanup
+        if (!account) return () => {};
         const socket = getSocket();
 
         const handleReceiveMessage = (data: {
@@ -137,12 +136,41 @@ export default function Home() {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
             {/* === Header === */}
-            <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between">
-                <h1 className="text-lg font-semibold">Relay</h1>
+            <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
+
+                {/* === Inline Logo + Text (Clickable) === */}
+                <a
+                    href="/"
+                    className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                    <div
+                        className="w-[28px] h-[28px] bg-gradient-to-br from-[#4F00E9] to-[#00BFFF] transition-all duration-300 group-hover:brightness-110"
+                        style={{
+                            WebkitMaskImage: 'url(/images/relay-logo.svg)',
+                            WebkitMaskRepeat: 'no-repeat',
+                            WebkitMaskPosition: 'center',
+                            WebkitMaskSize: 'contain',
+                            maskImage: 'url(/images/relay-logo.svg)',
+                            maskRepeat: 'no-repeat',
+                            maskPosition: 'center',
+                            maskSize: 'contain',
+                        }}
+                    />
+                    <img
+                        src="/images/relay-text.svg"
+                        alt="Relay text"
+                        className="w-[85px] dark:invert-[0.9] brightness-0 saturate-100 hue-rotate-[210deg] transition-all duration-300"
+                    />
+                </a>
+
+
+                {/* === Right-side controls === */}
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
+                        <p className="text-sm font-medium">
+                            {account.meta.name || "Account"}
+                        </p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"

@@ -1,6 +1,7 @@
 // src/app/components/Header.tsx
 'use client';
 
+import Image from "next/image";
 import DarkModeToggle from "./DarkModeToggle";
 
 export default function Header({
@@ -16,8 +17,33 @@ export default function Header({
 }) {
     return (
         <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Relay</h1>
 
+            {/* === Logo inline === */}
+            <div className="flex items-center gap-2 group select-none">
+                <div
+                    className="w-[34px] h-[34px] bg-gradient-to-br from-[#4F00E9] to-[#00BFFF] transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+                    style={{
+                        WebkitMaskImage: 'url(/images/relay-logo.svg)',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        WebkitMaskSize: 'contain',
+                        maskImage: 'url(/images/relay-logo.svg)',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                        maskSize: 'contain',
+                    }}
+                />
+                <Image
+                    src="/images/relay-text.svg"
+                    alt="Relay text"
+                    width={90}
+                    height={30}
+                    className="transition-all duration-300 dark:invert-[0.9] brightness-0 saturate-100 hue-rotate-[210deg]"
+                    priority
+                />
+            </div>
+
+            {/* === Account info + dark mode toggle === */}
             <div className="flex items-center gap-3">
                 <DarkModeToggle />
                 <div className="text-right">
