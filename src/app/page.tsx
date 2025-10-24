@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link"; // ✅ Added for internal navigation
 import ContactList from "./components/ContactList";
 import ChatWindow from "./components/ChatWindow";
 import AddContactModal from "./components/AddContactModal";
@@ -139,7 +140,7 @@ export default function Home() {
             <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
 
                 {/* === Inline Logo + Text (Clickable) === */}
-                <a
+                <Link
                     href="/"
                     className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 >
@@ -161,8 +162,7 @@ export default function Home() {
                         alt="Relay text"
                         className="w-[85px] dark:invert-[0.9] brightness-0 saturate-100 hue-rotate-[210deg] transition-all duration-300"
                     />
-                </a>
-
+                </Link>
 
                 {/* === Right-side controls === */}
                 <div className="flex items-center gap-3">
