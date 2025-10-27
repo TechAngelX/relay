@@ -2,6 +2,10 @@
 'use client';
 
 import { useState } from "react";
+import { ethers } from "ethers";
+import usernameRegistryABI from "@/abis/UsernameRegistry.json";
+
+const CONTRACT_ADDRESS = "0x0E4716Dc8b9c6a6DC32867b50042d71C181B87C2";
 
 export default function UsernameRegistration({
                                                  currentUserAddress,
@@ -16,11 +20,32 @@ export default function UsernameRegistration({
         if (!username.trim()) return setError("Please enter a username.");
         setLoading(true);
         try {
-            // registration logic
+            if (!window.ethereum) {
+                setError("MetaMask not detected. Please install it first.");
+                return;
+            }
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+
+            const signer = await provider.getSigner();
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, usernameRegistryABI, signer);
+
             console.log("Register username:", username, "for", currentUserAddress);
+
+            const tx = await contract.registerUsername(username, {
+                value: ethers.parseEther("0.001"),
+            });
+
+            await tx.wait();
+
+            alert(`Username "${username}" registered successfully.`);
             setError("");
+            setUsername("");
         } catch (err) {
-            setError((err as Error).message);
+            console.error(err);
+            if ((err as any)?.reason) setError((err as any).reason);
+            else setError((err as Error).message);
         } finally {
             setLoading(false);
         }

@@ -15,7 +15,9 @@ export const connectToPolkadot = async (): Promise<ApiPromise | null> => {
   try {
     const provider = new WsProvider(PASSET_HUB_WS_ENDPOINT, false);
 
-    provider.on('error', () => {});
+    provider.on('error', () => {
+      // Silently ignore
+    });
 
     api = await ApiPromise.create({
       provider,
@@ -23,7 +25,7 @@ export const connectToPolkadot = async (): Promise<ApiPromise | null> => {
     });
 
     return api;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -35,12 +37,10 @@ export const connectWallet = async (): Promise<InjectedAccountWithMeta[]> => {
     throw new Error('No Polkadot extension found. Please install Polkadot.js extension.');
   }
 
-  await new Promise(resolve => setTimeout(resolve, 300));
-
   const accounts = await web3Accounts();
 
   if (accounts.length === 0) {
-    throw new Error('No accounts found. Please authorise this website in the Polkadot.js extension (click the extension icon, then click the gear icon and ensure "Relay" is in the allowed list), then refresh the page.');
+    throw new Error('No accounts found. Please create an account in Polkadot.js extension or authorise this website.');
   }
 
   return accounts.map(account => ({
