@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import usernameRegistryABI from "@/abis/UsernameRegistry.json";
 
 const CONTRACT_ADDRESS = "0x0E4716Dc8b9c6a6DC32867b50042d71C181B87C2";
+const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
 
 export default function UsernameRegistration({
                                                  currentUserAddress,
@@ -31,16 +32,17 @@ export default function UsernameRegistration({
             const signer = await provider.getSigner();
             const contract = new ethers.Contract(CONTRACT_ADDRESS, usernameRegistryABI, signer);
 
-            console.log("Register username:", username, "for", currentUserAddress);
-
             const finalUsername = username.endsWith(".relay") ? username : `${username}.relay`;
+
+            console.log("Register username:", finalUsername, "for", currentUserAddress);
+
             const tx = await contract.registerUsername(finalUsername, {
                 value: ethers.parseEther("0.001"),
             });
 
             await tx.wait();
 
-            alert(`Username "${username}" registered successfully.`);
+            alert(`Username "${finalUsername}" registered successfully.`);
             setError("");
             setUsername("");
         } catch (err) {
@@ -51,6 +53,45 @@ export default function UsernameRegistration({
             setLoading(false);
         }
     };
+
+// Developer-only: View all registered usernames
+    const handleViewUsernames = async (): Promise<void> => {
+        try {
+            if (!window.ethereum) {
+                console.warn("MetaMask not detected.");
+                return;
+            }
+
+            // Create a read-only provider from the injected MetaMask object
+            const provider = new ethers.BrowserProvider(window.ethereum!);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, usernameRegistryABI, provider);
+
+            // Fetch all past UsernameRegistered events
+            const logs = (await contract.queryFilter("UsernameRegistered")) as ethers.EventLog[];
+
+            if (!logs.length) {
+                console.log("No usernames registered yet.");
+                return;
+            }
+
+            console.group("=== Registered usernames ===");
+            logs.forEach((log) => {
+                const user = log.args[0];
+                const name = log.args[1];
+                console.log(`${user} → ${name}`);
+            });
+            console.groupEnd();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+
+    // Only expose in debug mode (invisible to production)
+    if (DEBUG_MODE) {
+        (window as any).viewUsernames = handleViewUsernames;
+        console.log("🛠️ Debug mode active — type viewUsernames() in the browser console");
+    }
 
     return (
         <div className="bg-white dark:bg-[var(--color-darkcard)] text-gray-900 dark:text-gray-200 p-4 rounded-xl shadow-elevated transition-all duration-300">

@@ -7,6 +7,14 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "user", "type": "address" },
+      { "indexed": false, "internalType": "string", "name": "username", "type": "string" }
+    ],
+    "name": "UsernameRegistered",
+    "type": "event"
   }
 ]
-

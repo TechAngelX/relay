@@ -9,6 +9,9 @@ body {
 
 **Polkadot-first, Ethereum-friendly**
 
+PolkaVM
+https://blockscout-passet-hub.parity-testnet.parity.io/
+
 The chat & identity system is built on Polkadot's tech stack, but can recognize and onboard users from the Ethereum world using the EVM compatibility layer.
 Decentralized Identity & Live Communication for Polkadot Users
 
