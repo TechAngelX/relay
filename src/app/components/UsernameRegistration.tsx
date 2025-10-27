@@ -33,7 +33,8 @@ export default function UsernameRegistration({
 
             console.log("Register username:", username, "for", currentUserAddress);
 
-            const tx = await contract.registerUsername(username, {
+            const finalUsername = username.endsWith(".relay") ? username : `${username}.relay`;
+            const tx = await contract.registerUsername(finalUsername, {
                 value: ethers.parseEther("0.001"),
             });
 

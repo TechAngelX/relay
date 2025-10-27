@@ -10,6 +10,9 @@ body {
 **Polkadot-first, Ethereum-friendly**
 
 The chat & identity system is built on Polkadot's tech stack, but can recognize and onboard users from the Ethereum world using the EVM compatibility layer.
+Decentralized Identity & Live Communication for Polkadot Users
+
+A user-centric app where Polkadot users register a unique on-chain username, discover others, and instantly connect via decentralized video chat — without sharing personal data or relying on centralized servers.
 
 ![Relay App Screenshot](public/images/screenshot1.png)
 
