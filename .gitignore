@@ -16,3 +16,4 @@ npm-debug.log
 # Folders to ignore
 nonuploadable/
 /.env.local
+.vercel

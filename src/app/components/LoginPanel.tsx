@@ -1,123 +1,148 @@
-// /src/app/components/LoginPanel.tsx:
-import React, { useState } from "react";
-import { io, Socket } from "socket.io-client";
-import { v4 as uuidv4 } from "uuid";
-import { ethers } from "ethers";
-import {
-    web3Enable,
-    web3Accounts,
-    web3FromAddress,
-} from "@polkadot/extension-dapp";
+// src/app/components/LoginPanel.tsx
+'use client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000";
+import { useState, useEffect } from "react";
+import { loginGuest, loginWallet, loginPolkadot } from "../services/socket";
+import detectEthereumProvider from "@metamask/detect-provider";
 
-interface LoginProps {
-    onLogin: (user: {
-        address: string;
-        type: "GUEST" | "EVM" | "SUBSTRATE";
-        connected: boolean;
-    }) => void;
-}
+export default function LoginPanel() {
+    const [hasPolkadot, setHasPolkadot] = useState(false);
+    const [hasMetaMask, setHasMetaMask] = useState(false);
+    const [isSafari, setIsSafari] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [guestName, setGuestName] = useState("");
 
-export default function LoginPanel({ onLogin }: LoginProps) {
-    const [status, setStatus] = useState<string>("");
-    const [socket, setSocket] = useState<Socket | null>(null);
+    useEffect(() => {
+        // Detect Polkadot.js and MetaMask
+        if (typeof window !== "undefined") {
+            setHasPolkadot(!!(window as any).injectedWeb3);
 
-    // ---------- GUEST LOGIN ----------
-    const handleGuestLogin = async () => {
-        setStatus("Connecting as guest...");
-        const guestId = "guest-" + uuidv4().slice(0, 8);
-        localStorage.setItem("guestId", guestId);
-        const sock = io(SOCKET_URL);
-        sock.emit("guestLogin", { id: guestId });
-        setSocket(sock);
-        onLogin({ address: guestId, type: "GUEST", connected: true });
-        setStatus("Guest mode active");
-    };
-
-    // ---------- METAMASK LOGIN ----------
-    const handleMetaMaskLogin = async () => {
-        try {
-            if (!window.ethereum) throw new Error("MetaMask not detected");
-            setStatus("Requesting MetaMask connection...");
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const address = await signer.getAddress();
-            const nonce = "Login to Relay " + Date.now();
-            const signature = await signer.signMessage(nonce);
-
-            const sock = io(SOCKET_URL);
-            sock.emit("walletLogin", { address, signature, type: "EVM" });
-            setSocket(sock);
-            onLogin({ address, type: "EVM", connected: true });
-            setStatus("Connected with MetaMask");
-        } catch (err) {
-            console.error(err);
-            setStatus("MetaMask login failed");
-        }
-    };
-
-    // ---------- POLKADOT.JS LOGIN ----------
-    const handlePolkadotLogin = async () => {
-        try {
-            setStatus("Requesting Polkadot.js access...");
-            const extensions = await web3Enable("Relay App");
-            if (extensions.length === 0)
-                throw new Error("No Polkadot.js extension found");
-
-            const accounts = await web3Accounts();
-            if (accounts.length === 0) throw new Error("No Polkadot accounts available");
-
-            const account = accounts[0];
-            const injector = await web3FromAddress(account.address);
-            const signRaw = injector?.signer?.signRaw;
-            if (!signRaw) throw new Error("Cannot sign with Polkadot.js");
-
-            const nonce = `Login to Relay ${Date.now()}`;
-            const { signature } = await signRaw({
-                address: account.address,
-                data: Buffer.from(nonce).toString("hex"),
-                type: "bytes",
+            detectEthereumProvider().then((provider: any) => {
+                if (provider) setHasMetaMask(true);
             });
 
-            const sock = io(SOCKET_URL);
-            sock.emit("walletLogin", { address: account.address, signature, type: "SUBSTRATE" });
-            setSocket(sock);
-            onLogin({ address: account.address, type: "SUBSTRATE", connected: true });
-            setStatus("Connected with Polkadot.js");
-        } catch (err) {
+            const ua = navigator.userAgent.toLowerCase();
+            setIsSafari(ua.includes("safari") && !ua.includes("chrome"));
+        }
+    }, []);
+
+    const handlePolkadotLogin = async () => {
+        try {
+            const injected = (window as any).injectedWeb3;
+            if (!injected) throw new Error("No Polkadot.js extension found");
+
+            const provider = injected["polkadot-js"];
+            const accounts = await provider.enable("relay");
+            const address = accounts[0]?.address;
+            const signature = "fake_signature_for_demo"; // Replace with actual signing
+
+            loginPolkadot(address, signature);
+            setError(null);
+        } catch (err: any) {
             console.error(err);
-            setStatus("Polkadot.js login failed");
+            setError(err.message);
         }
     };
 
+    const handleMetaMaskLogin = async () => {
+        try {
+            const provider = (window as any).ethereum;
+            if (!provider) throw new Error("MetaMask not found");
+            await provider.request({ method: "eth_requestAccounts" });
+            const address = provider.selectedAddress;
+            const message = "Login to Relay";
+            const signature = await provider.request({
+                method: "personal_sign",
+                params: [message, address],
+            });
+
+            loginWallet(address, signature, "EVM");
+            setError(null);
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message);
+        }
+    };
+
+    const handleGuestLogin = (auto = false) => {
+        const name =
+            guestName.trim() ||
+            `guest-${Math.random().toString(36).substring(2, 7)}`;
+        loginGuest(name);
+        if (!auto) setError(null);
+    };
+
+    // ---------- AUTO-GUEST LOGIN ----------
+    useEffect(() => {
+        const showFallback = !hasPolkadot || isSafari;
+        if (showFallback) {
+            const timer = setTimeout(() => {
+                console.log("Auto guest login (no wallet detected)");
+                handleGuestLogin(true);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [hasPolkadot, isSafari]);
+
+    const showFallback = !hasPolkadot || isSafari;
+
+    // ---------- UI ----------
     return (
-        <div className="flex flex-col items-center gap-4 p-6 max-w-sm mx-auto mt-20 bg-gray-800 rounded-2xl shadow-lg text-white">
-            <h2 className="text-xl font-bold mb-4">Connect to Relay</h2>
+        <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gradient-to-b from-[#6C63FF] to-[#9E9AFF] shadow-xl max-w-sm mx-auto mt-10">
+            <h1 className="text-3xl font-bold text-white mb-2">relay</h1>
+            <p className="text-sm text-gray-100 mb-6">Web3 Communication</p>
 
-            <button
-                onClick={handleGuestLogin}
-                className="w-full py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition"
-            >
-                Continue as Guest
-            </button>
+            {/* --- Polkadot Flow --- */}
+            {!showFallback && (
+                <button
+                    onClick={handlePolkadotLogin}
+                    className="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-6 py-2 rounded-lg w-full transition-all"
+                >
+                    Connect Polkadot.js
+                </button>
+            )}
 
-            <button
-                onClick={handleMetaMaskLogin}
-                className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-400 transition"
-            >
-                Connect with MetaMask
-            </button>
+            {/* --- Fallback for Safari / No Extension --- */}
+            {showFallback && (
+                <div className="w-full flex flex-col gap-3">
+                    {hasMetaMask && (
+                        <button
+                            onClick={handleMetaMaskLogin}
+                            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition-all"
+                        >
+                            Connect MetaMask
+                        </button>
+                    )}
 
-            <button
-                onClick={handlePolkadotLogin}
-                className="w-full py-2 rounded-lg bg-pink-600 hover:bg-pink-500 transition"
-            >
-                Connect with Polkadot.js
-            </button>
+                    <div className="flex gap-2">
+                        <input
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            placeholder="Enter guest name"
+                            className="flex-1 p-2 rounded-md border border-gray-300 focus:outline-none"
+                        />
+                        <button
+                            onClick={() => handleGuestLogin(false)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 rounded-lg transition-all"
+                        >
+                            Guest Login
+                        </button>
+                    </div>
+                </div>
+            )}
 
-            {status && <p className="text-sm mt-4 text-gray-300">{status}</p>}
+            {error && (
+                <p className="text-red-200 text-sm mt-4 bg-red-600/40 p-2 rounded-md w-full text-center">
+                    {error}
+                </p>
+            )}
+
+            <p className="text-xs text-gray-200 mt-4 text-center">
+                {showFallback
+                    ? "Fallback mode: Guest or MetaMask login available."
+                    : "Using Polkadot.js wallet connection."}
+            </p>
         </div>
     );
 }
+
