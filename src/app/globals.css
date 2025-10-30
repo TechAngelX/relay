@@ -185,6 +185,12 @@ a:focus {
 }
 
 /* === GENERAL === */
+
+/* ===Next build button === */
+#__next-build-watcher-button {
+  bottom: 140px !important;
+}
+
 .bg-darkbg { background-color: var(--color-darkbg); }
 .bg-darkcard { background-color: var(--color-darkcard); }
 .text-darkaccent { color: var(--color-darkaccent); }

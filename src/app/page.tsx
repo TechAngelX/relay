@@ -1,3 +1,4 @@
+// src/app/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,6 +13,7 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { v4 as uuidv4 } from "uuid";
 import DarkModeToggle from "./components/DarkModeToggle";
 import VideoCall from "./components/VideoCall";
+
 
 const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
     ssr: false,
