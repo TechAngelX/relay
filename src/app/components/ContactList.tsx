@@ -16,41 +16,56 @@ export default function ContactList({
                                         onSelectContact,
                                         selectedContact,
                                         onAddContact,
-                                        currentAccount, // ✅ no default assignment needed
+                                        currentAccount,
                                     }: {
     contacts: Contact[];
     onSelectContact: (contact: Contact) => void;
     selectedContact: Contact | null;
     onAddContact: () => void;
-    currentAccount?: string | null; // ✅ make it optional
+    currentAccount: string | null;
 }) {
     const [friends, setFriends] = useState<Contact[]>([]);
     const [showFriends, setShowFriends] = useState(false);
 
-    // Load saved friends list for this wallet
+    // ✅ Check if localStorage is available (Firefox-safe)
+    const storageAvailable = (() => {
+        try {
+            const testKey = "__relay_test__";
+            localStorage.setItem(testKey, "1");
+            localStorage.removeItem(testKey);
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+
+    // ✅ Load saved friends list (safe for all browsers)
     useEffect(() => {
-        if (currentAccount) {
-            const saved = localStorage.getItem(`friends_${currentAccount}`);
-            if (saved) {
-                try {
-                    setFriends(JSON.parse(saved));
-                } catch {
-                    setFriends([]);
-                }
-            } else {
+        if (currentAccount && storageAvailable) {
+            try {
+                const saved = localStorage.getItem(`friends_${currentAccount}`);
+                setFriends(saved ? JSON.parse(saved) : []);
+            } catch {
+                console.warn("⚠️ Could not read from localStorage — skipping load");
                 setFriends([]);
             }
+        } else {
+            setFriends([]);
         }
-    }, [currentAccount]);
+    }, [currentAccount, storageAvailable]);
 
-    // Save friends list whenever it changes
+    // ✅ Save friends list when changed (if allowed)
     useEffect(() => {
-        if (currentAccount) {
-            localStorage.setItem(`friends_${currentAccount}`, JSON.stringify(friends));
+        if (currentAccount && storageAvailable) {
+            try {
+                localStorage.setItem(`friends_${currentAccount}`, JSON.stringify(friends));
+            } catch {
+                console.warn("⚠️ localStorage blocked — skipping save");
+            }
         }
-    }, [friends, currentAccount]);
+    }, [friends, currentAccount, storageAvailable]);
 
-    // Add new contact to friends list
+    // ✅ Add new contact to friend list (avoid duplicates)
     const addFriend = (contact: Contact) => {
         setFriends((prev) => {
             if (prev.find((f) => f.address === contact.address)) return prev;
@@ -58,8 +73,10 @@ export default function ContactList({
         });
     };
 
+    // === UI ===
     return (
         <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] shadow-elevated transition-all">
+            {/* === Header === */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-semibold">Chats</h2>
                 <div className="flex gap-2">
@@ -79,15 +96,14 @@ export default function ContactList({
                 </div>
             </div>
 
+            {/* === Content Area === */}
             <div className="flex-1 overflow-y-auto">
                 {showFriends ? (
                     friends.length === 0 ? (
                         <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                             No friends saved yet
                             <br />
-                            <span className="text-sm">
-                Add and select a contact to save as friend
-              </span>
+                            <span className="text-sm">Add and select a contact to save as friend</span>
                         </div>
                     ) : (
                         friends.map((friend, index) => (
