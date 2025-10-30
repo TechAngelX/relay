@@ -16,13 +16,13 @@ export default function ContactList({
                                         onSelectContact,
                                         selectedContact,
                                         onAddContact,
-                                        currentAccount, // pass in the connected wallet address from parent
+                                        currentAccount, // ✅ no default assignment needed
                                     }: {
     contacts: Contact[];
     onSelectContact: (contact: Contact) => void;
     selectedContact: Contact | null;
     onAddContact: () => void;
-    currentAccount: string | null;
+    currentAccount?: string | null; // ✅ make it optional
 }) {
     const [friends, setFriends] = useState<Contact[]>([]);
     const [showFriends, setShowFriends] = useState(false);
@@ -53,7 +53,7 @@ export default function ContactList({
     // Add new contact to friends list
     const addFriend = (contact: Contact) => {
         setFriends((prev) => {
-            if (prev.find(f => f.address === contact.address)) return prev;
+            if (prev.find((f) => f.address === contact.address)) return prev;
             return [...prev, contact];
         });
     };
@@ -85,7 +85,9 @@ export default function ContactList({
                         <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                             No friends saved yet
                             <br />
-                            <span className="text-sm">Add and select a contact to save as friend</span>
+                            <span className="text-sm">
+                Add and select a contact to save as friend
+              </span>
                         </div>
                     ) : (
                         friends.map((friend, index) => (
