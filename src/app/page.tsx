@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link"; // ✅ Added for internal navigation
+import Link from "next/link";
 import ContactList from "./components/ContactList";
 import ChatWindow from "./components/ChatWindow";
 import AddContactModal from "./components/AddContactModal";
@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import DarkModeToggle from "./components/DarkModeToggle";
 import VideoCall from "./components/VideoCall";
 
-
+// === Dynamic Import ===
 const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
     ssr: false,
     loading: () => (
@@ -45,7 +45,7 @@ interface Message {
 
 type CallMode = "video" | "audio" | null;
 
-// === Component ===
+// === Main Component ===
 export default function Home() {
     const [account, setAccount] = useState<Account | null>(null);
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -58,7 +58,7 @@ export default function Home() {
 
     // === Socket setup ===
     useEffect(() => {
-        if (!account) return () => {};
+        if (!account) return;
         const socket = getSocket();
 
         const handleReceiveMessage = (data: {
@@ -85,15 +85,17 @@ export default function Home() {
         };
 
         socket.on("receive-message", handleReceiveMessage);
-        return () => socket.off("receive-message", handleReceiveMessage);
+        return () => {
+            socket.off("receive-message", handleReceiveMessage);
+        };
     }, [account]);
 
-    // === Contact handling ===
+    // === Add contact ===
     const handleAddContact = (address: string, name: string) => {
         setContacts((prev) => [{ address, name, online: false }, ...prev]);
     };
 
-    // === Message sending ===
+    // === Send message ===
     const handleSendMessage = (text: string) => {
         if (!account || !selectedContact) return;
 
@@ -133,15 +135,14 @@ export default function Home() {
         }
     };
 
-    // === UI ===
+    // === Render wallet connect ===
     if (!account) return <WalletConnect onConnect={setAccount} />;
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
             {/* === Header === */}
             <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
-
-                {/* === Inline Logo + Text (Clickable) === */}
+                {/* === Logo + Title === */}
                 <Link
                     href="/"
                     className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -149,14 +150,14 @@ export default function Home() {
                     <div
                         className="w-[28px] h-[28px] bg-gradient-to-br from-[#4F00E9] to-[#00BFFF] transition-all duration-300 group-hover:brightness-110"
                         style={{
-                            WebkitMaskImage: 'url(/images/relay-logo.svg)',
-                            WebkitMaskRepeat: 'no-repeat',
-                            WebkitMaskPosition: 'center',
-                            WebkitMaskSize: 'contain',
-                            maskImage: 'url(/images/relay-logo.svg)',
-                            maskRepeat: 'no-repeat',
-                            maskPosition: 'center',
-                            maskSize: 'contain',
+                            WebkitMaskImage: "url(/images/relay-logo.svg)",
+                            WebkitMaskRepeat: "no-repeat",
+                            WebkitMaskPosition: "center",
+                            WebkitMaskSize: "contain",
+                            maskImage: "url(/images/relay-logo.svg)",
+                            maskRepeat: "no-repeat",
+                            maskPosition: "center",
+                            maskSize: "contain",
                         }}
                     />
                     <img
@@ -166,13 +167,11 @@ export default function Home() {
                     />
                 </Link>
 
-                {/* === Right-side controls === */}
+                {/* === Right Controls === */}
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">
-                            {account.meta.name || "Account"}
-                        </p>
+                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"
@@ -185,7 +184,7 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* === Main content === */}
+            {/* === Main Layout === */}
             <div className="flex-1 flex overflow-hidden">
                 {/* === Contact List === */}
                 <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] transition-colors duration-300">
@@ -194,6 +193,7 @@ export default function Home() {
                         onSelectContact={setSelectedContact}
                         selectedContact={selectedContact}
                         onAddContact={() => setIsAddContactModalOpen(true)}
+                        currentAccount={account?.address || null} // ✅ added
                     />
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                         <UsernameRegistration currentUserAddress={account.address} />
