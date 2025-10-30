@@ -130,6 +130,7 @@ Back to Chat (username now displays instead of address)
 
 * Next.js 15.5.6 with Turbopack
 * React 19 + TypeScript
+* PAPI (Polkadot API SDK)
 * Tailwind CSS 4.1
 * Deployed on Vercel
 

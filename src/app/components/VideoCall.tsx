@@ -32,7 +32,18 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   const socket = getSocket();
 
   useEffect(() => {
-    const peer = new Peer(userId);
+    const peer = new Peer(userId, {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          {
+            urls: 'turn:relay.metered.ca:80',
+            username: 'openai',
+            credential: 'openai',
+          },
+        ],
+      },
+    });
     peerRef.current = peer;
 
     peer.on('open', (id) => {
@@ -40,7 +51,6 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
       setStatus('Ready');
     });
 
-    // Incoming call
     peer.on('call', async (call) => {
       setStatus(`Incoming call from ${call.peer}`);
       const stream = await getUserMediaWithMeter();
@@ -63,7 +73,6 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
       cleanupAudio();
       stopLocalStream();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const startCall = async () => {
