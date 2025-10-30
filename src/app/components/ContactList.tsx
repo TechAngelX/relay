@@ -27,7 +27,7 @@ export default function ContactList({
     const [friends, setFriends] = useState<Contact[]>([]);
     const [showFriends, setShowFriends] = useState(false);
 
-    // ✅ Check if localStorage is available (Firefox-safe)
+    // ✅ Check localStorage availability (Firefox-safe)
     const storageAvailable = (() => {
         try {
             const testKey = "__relay_test__";
@@ -39,7 +39,7 @@ export default function ContactList({
         }
     })();
 
-    // ✅ Load saved friends list (safe for all browsers)
+    // ✅ Load saved friends
     useEffect(() => {
         if (currentAccount && storageAvailable) {
             try {
@@ -54,7 +54,7 @@ export default function ContactList({
         }
     }, [currentAccount, storageAvailable]);
 
-    // ✅ Save friends list when changed (if allowed)
+    // ✅ Save friends list when updated
     useEffect(() => {
         if (currentAccount && storageAvailable) {
             try {
@@ -65,12 +65,22 @@ export default function ContactList({
         }
     }, [friends, currentAccount, storageAvailable]);
 
-    // ✅ Add new contact to friend list (avoid duplicates)
+    // ✅ Add new contact
     const addFriend = (contact: Contact) => {
         setFriends((prev) => {
             if (prev.find((f) => f.address === contact.address)) return prev;
             return [...prev, contact];
         });
+    };
+
+    // ✅ Remove friend with confirmation
+    const removeFriend = (address: string) => {
+        const friend = friends.find((f) => f.address === address);
+        if (!friend) return;
+
+        if (confirm(`Are you sure you want to remove ${friend.name}?`)) {
+            setFriends((prev) => prev.filter((f) => f.address !== address));
+        }
     };
 
     // === UI ===
@@ -96,7 +106,7 @@ export default function ContactList({
                 </div>
             </div>
 
-            {/* === Content Area === */}
+            {/* === Content === */}
             <div className="flex-1 overflow-y-auto">
                 {showFriends ? (
                     friends.length === 0 ? (
@@ -109,24 +119,35 @@ export default function ContactList({
                         friends.map((friend, index) => (
                             <div
                                 key={`${friend.address}-${index}`}
-                                onClick={() => onSelectContact(friend)}
-                                className={`p-3 cursor-pointer border-b border-gray-200 dark:border-gray-700 transition-colors ${
+                                className={`p-3 border-b border-gray-200 dark:border-gray-700 transition-colors group ${
                                     selectedContact?.address === friend.address
                                         ? "bg-blue-100 dark:bg-[var(--color-darkaccent)]/30"
                                         : "hover:bg-gray-200 dark:hover:bg-[var(--color-darkaccent)]/20"
                                 }`}
                             >
-                                <div className="flex justify-between items-center">
+                                <div
+                                    onClick={() => onSelectContact(friend)}
+                                    className="flex justify-between items-center cursor-pointer"
+                                >
                                     <span className="font-medium">{friend.name}</span>
                                     {friend.online && (
                                         <span className="w-2.5 h-2.5 bg-green-500 rounded-full" />
                                     )}
                                 </div>
+
                                 {friend.lastMessage && (
                                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                         {friend.lastMessage}
                                     </p>
                                 )}
+
+                                {/* 🗑️ Remove Friend Button (appears on hover) */}
+                                <button
+                                    onClick={() => removeFriend(friend.address)}
+                                    className="opacity-0 group-hover:opacity-100 text-xs text-red-600 dark:text-red-400 mt-2 transition-opacity hover:underline"
+                                >
+                                    Remove friend
+                                </button>
                             </div>
                         ))
                     )
