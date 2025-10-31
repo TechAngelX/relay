@@ -1,3 +1,4 @@
+// src/app/components/VideoCall.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -7,7 +8,8 @@ import { getSocket } from '../services/socket';
 interface VideoCallProps {
   userId: string;
   remoteId?: string;
-  mode: 'video' | 'audio';
+  mode: "video" | "audio"; 
+
 }
 
 export default function VideoCall({ userId, remoteId }: VideoCallProps) {
@@ -15,12 +17,13 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   const [connectedId, setConnectedId] = useState<string>('');
   const [status, setStatus] = useState<string>('Idle');
   const [isInCall, setIsInCall] = useState(false);
-  const [inputLevel, setInputLevel] = useState(0);
+  const [inputLevel, setInputLevel] = useState(0); // mic level 0..1
 
   const localVideo = useRef<HTMLVideoElement>(null);
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const peerRef = useRef<Peer>();
   const currentCall = useRef<MediaConnection>();
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -41,7 +44,6 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
         ],
       },
     });
-
     peerRef.current = peer;
 
     peer.on('open', (id) => {
@@ -62,14 +64,12 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
         setConnectedId(call.peer);
       });
 
-      call.on('close', handleEndCall);
-      call.on('error', handleEndCall);
+      call.on('close', () => handleEndCall());
+      call.on('error', () => handleEndCall());
     });
 
     return () => {
-      try {
-        peer.destroy();
-      } catch {}
+      try { peer.destroy(); } catch {}
       cleanupAudio();
       stopLocalStream();
     };
@@ -91,8 +91,8 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
       setStatus('In call');
     });
 
-    call.on('close', handleEndCall);
-    call.on('error', handleEndCall);
+    call.on('close', () => handleEndCall());
+    call.on('error', () => handleEndCall());
   };
 
   const handleEndCall = () => {
@@ -104,9 +104,7 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   };
 
   const endCall = () => {
-    try {
-      currentCall.current?.close();
-    } catch {}
+    try { currentCall.current?.close(); } catch {}
     handleEndCall();
   };
 
@@ -119,6 +117,7 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
 
   const startAudioMeter = (stream: MediaStream) => {
     cleanupAudio();
+
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
@@ -150,16 +149,14 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
   const cleanupAudio = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-    try {
-      audioCtxRef.current?.close();
-    } catch {}
+    try { audioCtxRef.current?.close(); } catch {}
     audioCtxRef.current = null;
     analyserRef.current = null;
     setInputLevel(0);
   };
 
   const stopLocalStream = () => {
-    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current?.getTracks().forEach(t => t.stop());
     localStreamRef.current = null;
   };
 
@@ -168,16 +165,17 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
     const activeCount = Math.round(level * segments);
 
     return (
-        <div className="audio-meter w-full flex gap-1 justify-center">
+        <div className="audio-meter w-full">
           {Array.from({ length: segments }).map((_, i) => (
               <div
                   key={i}
-                  className={`w-2 h-3 rounded-sm ${i < activeCount ? 'bg-green-500' : 'bg-gray-700'}`}
+                  className={`bar ${i < activeCount ? 'active' : ''}`}
               />
           ))}
         </div>
     );
   };
+
 
   return (
       <div className="flex flex-col items-center bg-white dark:bg-[var(--color-darkcard)] p-6 rounded-2xl shadow-lg w-full max-w-3xl gap-4">
@@ -191,7 +189,9 @@ export default function VideoCall({ userId, remoteId }: VideoCallProps) {
             <video ref={localVideo} autoPlay muted playsInline className="w-full rounded-lg shadow" />
             <div className="mt-2">
               <Meter level={inputLevel} />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mic level</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                Mic level
+              </div>
             </div>
           </div>
 

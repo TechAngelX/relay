@@ -1,81 +1,116 @@
 // server/src/server.ts
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
+import { ethers } from "ethers";
 
 const app = express();
-const httpServer = createServer(app);
+app.use(express.json());
 
+// ✅ Explicitly allow your production + local dev origins
 const allowedOrigins = [
-  'http://localhost:3001',
-  'https://relay.techangelx.com',
-  'https://server-proud-shadow-4342.fly.dev'
+  "https://relay.techangelx.com", // production frontend (Vercel)
+  "http://localhost:3001"         // dev
 ];
+
+app.use(
+    cors({
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+      credentials: true,
+    })
+);
+
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST']
-  }
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
-app.use(cors({ origin: allowedOrigins }));
-app.use(express.json());
+const users: Record<string, any> = {};
 
-const connectedUsers = new Map<string, string>();
+// === CONNECTION ===
+io.on("connection", (socket) => {
+  console.log(`🟢 Connected: ${socket.id}`);
 
-interface MessageData {
-  to: string;
-  from: string;
-  text: string;
-  timestamp: string;
-}
-
-io.on('connection', (socket) => {
-  console.log('Socket connected:', socket.id);
-
-  socket.on('register', (address: string) => {
-    connectedUsers.set(address, socket.id);
-    console.log(`User registered - Address: ${address}, Socket: ${socket.id}`);
-    console.log(`Total users connected: ${connectedUsers.size}`);
-    io.emit('user-online', address);
+  // ---------- GUEST LOGIN ----------
+  socket.on("guestLogin", ({ id }) => {
+    if (!id) return socket.emit("loginError", "Invalid guest ID");
+    users[socket.id] = { address: id, type: "GUEST", connectedAt: new Date() };
+    console.log(`👤 Guest joined: ${id}`);
+    socket.emit("loginSuccess", users[socket.id]);
+    io.emit("userList", Object.values(users));
   });
 
-  socket.on('send-message', (data: MessageData) => {
-    console.log(`Message from ${data.from.slice(0, 10)}... to ${data.to.slice(0, 10)}...`);
-    const recipientSocketId = connectedUsers.get(data.to);
+  // ---------- WALLET LOGIN (EVM / SUBSTRATE) ----------
+  socket.on("walletLogin", async ({ address, signature, type }) => {
+    try {
+      if (!address || !signature)
+        return socket.emit("loginError", "Missing address or signature");
 
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit('receive-message', {
-        from: data.from,
-        text: data.text,
-        timestamp: data.timestamp,
-        id: Date.now().toString()
-      });
-      socket.emit('message-sent', { success: true });
-      console.log('Message delivered successfully');
-    } else {
-      socket.emit('message-sent', { success: false, error: 'User offline' });
-      console.log('Message failed: recipient offline');
-    }
-  });
-
-  socket.on('disconnect', () => {
-    for (const [address, socketId] of connectedUsers.entries()) {
-      if (socketId === socket.id) {
-        connectedUsers.delete(address);
-        console.log(`User disconnected - Address: ${address}, Socket: ${socket.id}`);
-        console.log(`Total users connected: ${connectedUsers.size}`);
-        io.emit('user-offline', address);
-        break;
+      if (type === "EVM") {
+        const msg = "Login to Relay";
+        const recovered = ethers.verifyMessage(msg, signature);
+        if (recovered.toLowerCase() !== address.toLowerCase())
+          return socket.emit("loginError", "Invalid signature");
       }
+
+      users[socket.id] = { address, type, connectedAt: new Date() };
+      console.log(`💳 [${type}] ${address} connected`);
+      socket.emit("loginSuccess", users[socket.id]);
+      io.emit("userList", Object.values(users));
+    } catch (err) {
+      console.error("walletLogin error:", err);
+      socket.emit("loginError", "Wallet login failed");
+    }
+  });
+
+  // ---------- POLKADOT LOGIN ----------
+  socket.on("login", (data) => {
+    if (!data.address) return socket.emit("loginError", "Missing address");
+    users[socket.id] = {
+      address: data.address,
+      type: "SUBSTRATE",
+      connectedAt: new Date(),
+    };
+    console.log(`🔗 [SUBSTRATE] ${data.address} connected`);
+    socket.emit("loginSuccess", users[socket.id]);
+    io.emit("userList", Object.values(users));
+  });
+
+  // ---------- CHAT MESSAGES ----------
+  socket.on("message", (msg) => {
+    const user = users[socket.id];
+    if (!user) return;
+    const payload = {
+      from: user.address,
+      type: user.type,
+      text: msg,
+      timestamp: new Date(),
+    };
+    io.emit("message", payload);
+  });
+
+  // ---------- DISCONNECT ----------
+  socket.on("disconnect", () => {
+    const user = users[socket.id];
+    if (user) {
+      console.log(`🔴 ${user.address} disconnected`);
+      delete users[socket.id];
+      io.emit("userList", Object.values(users));
     }
   });
 });
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const HOST = '0.0.0.0';
+// === SERVER START ===
+const PORT = parseInt(process.env.PORT || "3000", 10);
+const HOST = "0.0.0.0";
+
 httpServer.listen(PORT, HOST, () => {
-  console.log(`Server running on ${HOST}:${PORT}`);
+  console.log(`🚀 Server running on ${HOST}:${PORT}`);
 });
