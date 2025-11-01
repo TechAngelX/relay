@@ -1,32 +1,88 @@
 // src/app/components/ChatWindow.tsx
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
+import { getSocket, loginGuest, sendMessage } from "@/app/services/socket";
 
 interface ChatWindowProps {
     contact: {
         name: string;
         address: string;
     } | null;
-    messages: {
-        id: string;
-        text: string;
-        isMine: boolean;
-    }[];
-    onSendMessage: (text: string) => void;
     currentUserAddress: string;
     onStartCall: (mode: "video" | "audio") => void;
 }
 
+interface Message {
+    id: string;
+    from: string;
+    to: string;
+    text: string;
+    isMine: boolean;
+}
+
 export default function ChatWindow({
                                        contact,
-                                       messages,
-                                       onSendMessage,
                                        currentUserAddress,
                                        onStartCall,
                                    }: ChatWindowProps) {
     const [text, setText] = useState("");
+    const [messages, setMessages] = useState<Message[]>([]);
 
+    // ------------------------------------------------------------
+    // Connect + listen for messages
+    // ------------------------------------------------------------
+    useEffect(() => {
+        // Login automatically as current user
+        if (currentUserAddress) {
+            loginGuest(currentUserAddress);
+        }
+
+        const s = getSocket();
+
+        s.on("receive-message", (msg) => {
+            console.log("UI received message:", msg);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now().toString(),
+                    from: msg.from,
+                    to: msg.to,
+                    text: msg.text,
+                    isMine: msg.from === currentUserAddress,
+                },
+            ]);
+        });
+
+        return () => {
+            s.off("receive-message");
+        };
+    }, [currentUserAddress]);
+
+    // ------------------------------------------------------------
+    // Send message
+    // ------------------------------------------------------------
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        if (text.trim() && contact) {
+            sendMessage(contact.address, text);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now().toString(),
+                    from: currentUserAddress,
+                    to: contact.address,
+                    text,
+                    isMine: true,
+                },
+            ]);
+            setText("");
+        }
+    };
+
+    // ------------------------------------------------------------
+    // UI
+    // ------------------------------------------------------------
     if (!contact) {
         return (
             <div className="flex flex-1 items-center justify-center text-gray-500">
@@ -34,14 +90,6 @@ export default function ChatWindow({
             </div>
         );
     }
-
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        if (text.trim()) {
-            onSendMessage(text);
-            setText("");
-        }
-    };
 
     return (
         <div className="flex flex-col flex-1 bg-white dark:bg-[var(--color-darkbg)] transition-colors duration-300">
@@ -81,7 +129,10 @@ export default function ChatWindow({
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-3 border-t border-gray-200 dark:border-gray-700">
+            <form
+                onSubmit={handleSubmit}
+                className="p-3 border-t border-gray-200 dark:border-gray-700"
+            >
                 <input
                     value={text}
                     onChange={(e) => setText(e.target.value)}
