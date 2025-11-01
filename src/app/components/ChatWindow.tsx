@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { getSocket, loginGuest, sendMessage } from "@/app/services/socket";
+import { getSocket } from "../services/socket";
 
 interface ChatWindowProps {
     contact: {
@@ -13,76 +13,66 @@ interface ChatWindowProps {
     onStartCall: (mode: "video" | "audio") => void;
 }
 
-interface Message {
-    id: string;
-    from: string;
-    to: string;
-    text: string;
-    isMine: boolean;
-}
-
 export default function ChatWindow({
                                        contact,
                                        currentUserAddress,
                                        onStartCall,
                                    }: ChatWindowProps) {
     const [text, setText] = useState("");
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<
+        { id: string; text: string; isMine: boolean }[]
+    >([]);
 
-    // ------------------------------------------------------------
-    // Connect + listen for messages
-    // ------------------------------------------------------------
+    const socket = getSocket();
+
+    // ✅ Attach message listener
     useEffect(() => {
-        // Login automatically as current user
-        if (currentUserAddress) {
-            loginGuest(currentUserAddress);
-        }
+        if (!socket) return;
 
-        const s = getSocket();
+        socket.on("receive-message", (data) => {
+            console.log("Message received:", data);
 
-        s.on("receive-message", (msg) => {
-            console.log("UI received message:", msg);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: Date.now().toString(),
-                    from: msg.from,
-                    to: msg.to,
-                    text: msg.text,
-                    isMine: msg.from === currentUserAddress,
-                },
-            ]);
+            // ✅ Add message if either side matches
+            if (!contact || !data) return;
+            if (data.from === contact.address || data.to === contact.address) {
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: data.id || Date.now().toString(),
+                        text: data.text,
+                        isMine: data.from === currentUserAddress,
+                    },
+                ]);
+            }
         });
 
         return () => {
-            s.off("receive-message");
+            socket.off("receive-message");
         };
-    }, [currentUserAddress]);
+    }, [socket, contact, currentUserAddress]);
 
-    // ------------------------------------------------------------
-    // Send message
-    // ------------------------------------------------------------
+    // ✅ Handle sending messages
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        if (text.trim() && contact) {
-            sendMessage(contact.address, text);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: Date.now().toString(),
-                    from: currentUserAddress,
-                    to: contact.address,
-                    text,
-                    isMine: true,
-                },
-            ]);
-            setText("");
-        }
+        if (!text.trim() || !contact) return;
+
+        const message = {
+            from: currentUserAddress,
+            to: contact.address,
+            text,
+            timestamp: new Date().toISOString(),
+        };
+
+        console.log("Sending message:", message);
+        socket.emit("send-message", message);
+
+        setMessages((prev) => [
+            ...prev,
+            { id: Date.now().toString(), text, isMine: true },
+        ]);
+        setText("");
     };
 
-    // ------------------------------------------------------------
-    // UI
-    // ------------------------------------------------------------
     if (!contact) {
         return (
             <div className="flex flex-1 items-center justify-center text-gray-500">
