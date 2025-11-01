@@ -8,7 +8,7 @@ import ContactList from "./components/ContactList";
 import ChatWindow from "./components/ChatWindow";
 import AddContactModal from "./components/AddContactModal";
 import UsernameRegistration from "./components/UsernameRegistration";
-import { getSocket } from "./services/socket";
+import { getSocket, loginGuest } from "./services/socket"; // ✅ added loginGuest
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { v4 as uuidv4 } from "uuid";
 import DarkModeToggle from "./components/DarkModeToggle";
@@ -89,6 +89,23 @@ export default function Home() {
             socket.off("receive-message", handleReceiveMessage);
         };
     }, [account]);
+
+    // === ✅ Auto-login to socket when wallet connects ===
+    useEffect(() => {
+        if (!account?.address) return;
+
+        console.log("Auto socket login:", account.address);
+        loginGuest(account.address);
+
+        const s = getSocket();
+        s.on("loginSuccess", (u) => console.log("Socket login success:", u));
+        s.on("loginError", (e) => console.error("Socket login error:", e));
+
+        return () => {
+            s.off("loginSuccess");
+            s.off("loginError");
+        };
+    }, [account?.address]);
 
     // === Add contact ===
     const handleAddContact = (address: string, name: string) => {
@@ -171,7 +188,9 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
+                        <p className="text-sm font-medium">
+                            {account.meta.name || "Account"}
+                        </p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"
@@ -193,7 +212,7 @@ export default function Home() {
                         onSelectContact={setSelectedContact}
                         selectedContact={selectedContact}
                         onAddContact={() => setIsAddContactModalOpen(true)}
-                        currentAccount={account?.address || null} // ✅ added
+                        currentAccount={account?.address || null}
                     />
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                         <UsernameRegistration currentUserAddress={account.address} />
@@ -215,7 +234,6 @@ export default function Home() {
                         setIsCalling(true);
                     }}
                 />
-
             </div>
 
             {/* === Add Contact Modal === */}
