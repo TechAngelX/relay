@@ -1,4 +1,5 @@
-// src/app/services/socket.ts
+"use client";
+
 import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
@@ -111,7 +112,7 @@ export const disconnectSocket = () => {
 };
 
 // ------------------------------------------------------------
-// Attach socket to window (for console testing)
+// Attach socket + helpers to window (for console testing)
 // ------------------------------------------------------------
 if (typeof window !== "undefined") {
   const s = getSocket();
