@@ -1,57 +1,81 @@
+// server/src/server.ts
+
 import express from "express";
-import { createServer } from "http";
+import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import { ethers } from "ethers";
 
 const app = express();
-app.use(express.json());
+app.use(cors());
 
-// Allow only your domains
-const allowedOrigins = [
-  "https://relay.techangelx.com", // production
-  "http://localhost:3001"         // dev
-];
-
-app.use(
-    cors({
-      origin: allowedOrigins,
-      methods: ["GET", "POST"],
-      credentials: true,
-    })
-);
-
-const httpServer = createServer(app);
-
-const io = new Server(httpServer, {
+const server = http.createServer(app);
+const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: "*",
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
-const users: Record<string, any> = {};
+// ===================================================================
+// Address normalization + socket tracking
+// ===================================================================
+interface UserSocket {
+  address: string;
+  type: string;
+  connectedAt: Date;
+}
 
-// === SOCKET EVENTS ===
+const usersBySocket: Record<string, UserSocket> = {};
+const socketsByAddress: Map<string, Set<string>> = new Map();
+
+const addrKey = (a?: string) => a?.toLowerCase().trim() || "";
+
+const bindSocketToAddress = (socketId: string, address: string, type: string) => {
+  const key = addrKey(address);
+  usersBySocket[socketId] = { address, type, connectedAt: new Date() };
+
+  if (!socketsByAddress.has(key)) socketsByAddress.set(key, new Set());
+  socketsByAddress.get(key)!.add(socketId);
+};
+
+const unbindSocket = (socketId: string) => {
+  const user = usersBySocket[socketId];
+  if (user) {
+    const key = addrKey(user.address);
+    const set = socketsByAddress.get(key);
+    if (set) {
+      set.delete(socketId);
+      if (set.size === 0) socketsByAddress.delete(key);
+    }
+    delete usersBySocket[socketId];
+  }
+};
+
+const currentUsersList = () =>
+    Array.from(new Set(Object.values(usersBySocket).map((u) => u.address)));
+
+// ===================================================================
+// SOCKET.IO CONNECTION HANDLERS
+// ===================================================================
 io.on("connection", (socket) => {
-  console.log(`Connected: ${socket.id}`);
+  console.log("Connected:", socket.id);
 
-  // ------------------------------
+  // -------------------------------
   // Guest login
-  // ------------------------------
-  socket.on("guestLogin", ({ id }) => {
+  // -------------------------------
+  socket.on("guestLogin", ({ id }: { id: string }) => {
     if (!id) return socket.emit("loginError", "Invalid guest ID");
-    users[socket.id] = { address: id, type: "GUEST", connectedAt: new Date() };
+    bindSocketToAddress(socket.id, id, "GUEST");
     console.log(`Guest joined: ${id}`);
-    socket.emit("loginSuccess", users[socket.id]);
-    io.emit("userList", Object.values(users));
+    socket.emit("loginSuccess", usersBySocket[socket.id]);
+    io.emit("userList", currentUsersList());
   });
 
-  // ------------------------------
-  // Wallet login (EVM/Substrate)
-  // ------------------------------
-  socket.on("walletLogin", async ({ address, signature, type }) => {
+  // -------------------------------
+  // Wallet login (EVM or substrate)
+  // -------------------------------
+  socket.on("walletLogin", async ({ address, signature, type }: { address: string; signature: string; type: string }) => {
     try {
       if (!address || !signature)
         return socket.emit("loginError", "Missing address or signature");
@@ -63,52 +87,49 @@ io.on("connection", (socket) => {
           return socket.emit("loginError", "Invalid signature");
       }
 
-      users[socket.id] = { address, type, connectedAt: new Date() };
+      bindSocketToAddress(socket.id, address, type || "WALLET");
       console.log(`[${type}] ${address} connected`);
-      socket.emit("loginSuccess", users[socket.id]);
-      io.emit("userList", Object.values(users));
+      socket.emit("loginSuccess", usersBySocket[socket.id]);
+      io.emit("userList", currentUsersList());
     } catch (err) {
       console.error("walletLogin error:", err);
       socket.emit("loginError", "Wallet login failed");
     }
   });
 
-  // ------------------------------
-  // Polkadot/Substrate login
-  // ------------------------------
-  socket.on("login", (data) => {
-    if (!data.address) return socket.emit("loginError", "Missing address");
-    users[socket.id] = {
-      address: data.address,
-      type: "SUBSTRATE",
-      connectedAt: new Date(),
-    };
+  // -------------------------------
+  // Generic substrate login
+  // -------------------------------
+  socket.on("login", (data: { address: string; type?: string }) => {
+    if (!data?.address) return socket.emit("loginError", "Missing address");
+    bindSocketToAddress(socket.id, data.address, data.type || "SUBSTRATE");
     console.log(`[SUBSTRATE] ${data.address} connected`);
-    socket.emit("loginSuccess", users[socket.id]);
-    io.emit("userList", Object.values(users));
+    socket.emit("loginSuccess", usersBySocket[socket.id]);
+    io.emit("userList", currentUsersList());
   });
 
-  // ------------------------------
-  // Register user
-  // ------------------------------
-  socket.on("register", (address) => {
+  // -------------------------------
+  // Register
+  // -------------------------------
+  socket.on("register", (address: string) => {
     if (!address) return;
-    users[socket.id] = { address, type: "REGISTERED", connectedAt: new Date() };
+    bindSocketToAddress(socket.id, address, "REGISTERED");
     console.log(`User registered: ${address}`);
-    io.emit("userList", Object.values(users));
+    io.emit("userList", currentUsersList());
   });
 
-  // ------------------------------
-  // Send message with detailed logs
-  // ------------------------------
-  socket.on("send-message", (data) => {
-    const sender = users[socket.id];
+  // -------------------------------
+  // Message handling
+  // -------------------------------
+  socket.on("send-message", (data: { to: string; text: string }) => {
+    const sender = usersBySocket[socket.id];
     if (!sender) {
       console.log("No sender found for socket:", socket.id);
       return;
     }
 
     const payload = {
+      id: Date.now().toString(),
       from: sender.address,
       to: data.to,
       text: data.text,
@@ -116,39 +137,43 @@ io.on("connection", (socket) => {
     };
 
     console.log("SEND-MESSAGE event:", payload);
-    console.log("Current users map:", users);
+    console.log("Current addresses online:", Array.from(socketsByAddress.keys()));
 
-    // Find the recipient by address
-    const recipient = Object.entries(users).find(
-        ([, u]) => u.address.trim() === data.to.trim()
-    );
+    const toKey = addrKey(data.to);
+    const recipients = socketsByAddress.get(toKey);
 
-    if (recipient) {
-      const [recipientSocketId, recipientUser] = recipient;
-      console.log(`Delivering to socket ${recipientSocketId}:`, recipientUser);
-      io.to(recipientSocketId).emit("receive-message", payload);
+    if (recipients && recipients.size > 0) {
+      for (const sid of recipients) {
+        io.to(sid).emit("receive-message", payload);
+      }
+
+      // echo back to sender's other devices/tabs
+      const senderSockets = socketsByAddress.get(addrKey(sender.address)) || new Set();
+      for (const sid of senderSockets) {
+        io.to(sid).emit("receive-message", payload);
+      }
+
+      console.log(`Delivered to ${recipients.size} socket(s) for ${data.to}`);
     } else {
       console.log(`Recipient ${data.to} not found or offline.`);
     }
   });
 
-  // ------------------------------
-  // Handle disconnections
-  // ------------------------------
+  // -------------------------------
+  // Disconnect
+  // -------------------------------
   socket.on("disconnect", () => {
-    const user = users[socket.id];
-    if (user) {
-      console.log(`${user.address} disconnected`);
-      delete users[socket.id];
-      io.emit("userList", Object.values(users));
-    }
+    const user = usersBySocket[socket.id];
+    if (user) console.log(`${user.address} disconnected`);
+    unbindSocket(socket.id);
+    io.emit("userList", currentUsersList());
   });
 });
 
-// === SERVER START ===
-const PORT = parseInt(process.env.PORT || "3000", 10);
-const HOST = "0.0.0.0";
-
-httpServer.listen(PORT, HOST, () => {
-  console.log(`Server running on ${HOST}:${PORT}`);
+// ===================================================================
+// Server listen
+// ===================================================================
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(` Relay server running on port ${PORT}`);
 });
