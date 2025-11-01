@@ -102,6 +102,10 @@ export const disconnectSocket = () => {
     socket.disconnect();
     console.log("Socket disconnected manually");
   }
+  if (typeof window !== "undefined") {
+    (window as any).socket = getSocket();
+  }
+
 };
 
 // ============================================================
