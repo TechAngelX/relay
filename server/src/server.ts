@@ -1,4 +1,3 @@
-// server/src/server.ts
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -38,6 +37,9 @@ const users: Record<string, any> = {};
 io.on("connection", (socket) => {
   console.log(`Connected: ${socket.id}`);
 
+  // ------------------------------
+  // Guest login
+  // ------------------------------
   socket.on("guestLogin", ({ id }) => {
     if (!id) return socket.emit("loginError", "Invalid guest ID");
     users[socket.id] = { address: id, type: "GUEST", connectedAt: new Date() };
@@ -46,6 +48,9 @@ io.on("connection", (socket) => {
     io.emit("userList", Object.values(users));
   });
 
+  // ------------------------------
+  // Wallet login (EVM/Substrate)
+  // ------------------------------
   socket.on("walletLogin", async ({ address, signature, type }) => {
     try {
       if (!address || !signature)
@@ -68,6 +73,9 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ------------------------------
+  // Polkadot/Substrate login
+  // ------------------------------
   socket.on("login", (data) => {
     if (!data.address) return socket.emit("loginError", "Missing address");
     users[socket.id] = {
@@ -80,6 +88,9 @@ io.on("connection", (socket) => {
     io.emit("userList", Object.values(users));
   });
 
+  // ------------------------------
+  // Register user
+  // ------------------------------
   socket.on("register", (address) => {
     if (!address) return;
     users[socket.id] = { address, type: "REGISTERED", connectedAt: new Date() };
@@ -87,9 +98,15 @@ io.on("connection", (socket) => {
     io.emit("userList", Object.values(users));
   });
 
+  // ------------------------------
+  // Send message with detailed logs
+  // ------------------------------
   socket.on("send-message", (data) => {
     const sender = users[socket.id];
-    if (!sender) return;
+    if (!sender) {
+      console.log("No sender found for socket:", socket.id);
+      return;
+    }
 
     const payload = {
       from: sender.address,
@@ -98,19 +115,26 @@ io.on("connection", (socket) => {
       timestamp: new Date(),
     };
 
+    console.log("SEND-MESSAGE event:", payload);
+    console.log("Current users map:", users);
+
+    // Find the recipient by address
     const recipient = Object.entries(users).find(
-        ([, u]) => u.address === data.to
+        ([, u]) => u.address.trim() === data.to.trim()
     );
 
     if (recipient) {
-      const [recipientSocketId] = recipient;
+      const [recipientSocketId, recipientUser] = recipient;
+      console.log(`Delivering to socket ${recipientSocketId}:`, recipientUser);
       io.to(recipientSocketId).emit("receive-message", payload);
-      console.log(`Message sent from ${sender.address} to ${data.to}`);
     } else {
-      console.log(`User ${data.to} not online`);
+      console.log(`Recipient ${data.to} not found or offline.`);
     }
   });
 
+  // ------------------------------
+  // Handle disconnections
+  // ------------------------------
   socket.on("disconnect", () => {
     const user = users[socket.id];
     if (user) {
