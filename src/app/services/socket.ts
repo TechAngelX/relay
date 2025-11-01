@@ -114,7 +114,10 @@ export const disconnectSocket = () => {
 // Attach socket to window (for console testing)
 // ------------------------------------------------------------
 if (typeof window !== "undefined") {
+  const s = getSocket();
+  (window as any).socket = s;
   (window as any).loginGuest = loginGuest;
   (window as any).sendMessage = sendMessage;
   (window as any).registerUser = registerUser;
+  s.connect();
 }
