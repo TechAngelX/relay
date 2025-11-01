@@ -25,15 +25,18 @@ export default function ChatWindow({
 
     const socket = getSocket();
 
-    // ✅ Attach message listener
+    // ✅ Auto-login and message listener
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !currentUserAddress) return;
+
+        console.log("Logging in socket:", currentUserAddress);
+        socket.emit("login", { address: currentUserAddress, type: "GUEST" });
 
         socket.on("receive-message", (data) => {
             console.log("Message received:", data);
-
-            // ✅ Add message if either side matches
             if (!contact || !data) return;
+
+            // ✅ Display if it's from or to the current chat contact
             if (data.from === contact.address || data.to === contact.address) {
                 setMessages((prev) => [
                     ...prev,
@@ -73,6 +76,7 @@ export default function ChatWindow({
         setText("");
     };
 
+    // === No contact selected ===
     if (!contact) {
         return (
             <div className="flex flex-1 items-center justify-center text-gray-500">
@@ -81,6 +85,7 @@ export default function ChatWindow({
         );
     }
 
+    // === Chat UI ===
     return (
         <div className="flex flex-col flex-1 bg-white dark:bg-[var(--color-darkbg)] transition-colors duration-300">
             {/* Header */}
