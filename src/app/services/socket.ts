@@ -97,7 +97,6 @@ export const sendMessage = (text: string) => {
   console.log(`Sending message: ${text}`);
   s.emit("message", text);
 };
-
 export const disconnectSocket = () => {
   if (socket && socket.connected) {
     socket.disconnect();
@@ -105,7 +104,12 @@ export const disconnectSocket = () => {
   }
 };
 
-// Expose socket globally in browser console
+// ============================================================
+// INITIALIZE AND ATTACH TO WINDOW
+// ============================================================
+
 if (typeof window !== "undefined") {
-  (window as any).socket = getSocket();
+  const s = getSocket();
+  (window as any).socket = s;
+  s.connect();
 }
