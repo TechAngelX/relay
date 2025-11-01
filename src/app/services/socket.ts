@@ -13,6 +13,9 @@ export interface User {
   connectedAt?: Date;
 }
 
+// ------------------------------------------------------------
+// Initialize socket connection
+// ------------------------------------------------------------
 export const getSocket = (): Socket => {
   if (!socket) {
     console.log("Creating new socket connection to", SOCKET_URL);
@@ -47,7 +50,7 @@ export const getSocket = (): Socket => {
       console.log("Active users:", list);
     });
 
-    socket.on("message", (msg) => {
+    socket.on("receive-message", (msg) => {
       console.log("Message received:", msg);
     });
   }
@@ -55,10 +58,9 @@ export const getSocket = (): Socket => {
   return socket;
 };
 
-// ============================================================
-// LOGIN HELPERS
-// ============================================================
-
+// ------------------------------------------------------------
+// Login helpers
+// ------------------------------------------------------------
 export const loginGuest = (id: string) => {
   const s = getSocket();
   if (!s.connected) s.connect();
@@ -84,34 +86,33 @@ export const loginPolkadot = (address: string, signature?: string) => {
   s.emit("login", { address, signature });
 };
 
-// ============================================================
-// GENERAL EMITTERS
-// ============================================================
-
-export const sendMessage = (text: string) => {
+// ------------------------------------------------------------
+// General emitters
+// ------------------------------------------------------------
+export const registerUser = (address: string) => {
   const s = getSocket();
-  if (!s.connected) {
-    console.warn("Socket not connected — message not sent");
-    return;
-  }
-  console.log(`Sending message: ${text}`);
-  s.emit("message", text);
+  if (!s.connected) s.connect();
+  console.log(`Registering user: ${address}`);
+  s.emit("register", address);
 };
+
+export const sendMessage = (to: string, text: string) => {
+  const s = getSocket();
+  if (!s.connected) s.connect();
+  console.log(`Sending message to ${to}: ${text}`);
+  s.emit("send-message", { to, text });
+};
+
 export const disconnectSocket = () => {
   if (socket && socket.connected) {
     socket.disconnect();
     console.log("Socket disconnected manually");
   }
-  if (typeof window !== "undefined") {
-    (window as any).socket = getSocket();
-  }
-
 };
 
-// ============================================================
-// INITIALIZE AND ATTACH TO WINDOW
-// ============================================================
-
+// ------------------------------------------------------------
+// Attach socket to window (for console testing)
+// ------------------------------------------------------------
 if (typeof window !== "undefined") {
   const s = getSocket();
   (window as any).socket = s;
