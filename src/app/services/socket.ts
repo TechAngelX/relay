@@ -1,3 +1,4 @@
+// src/app/services/socket.ts
 "use client";
 
 import { io, Socket } from "socket.io-client";
@@ -25,6 +26,8 @@ export const getSocket = (): Socket => {
       transports: ["websocket"],
       withCredentials: true,
       autoConnect: false,
+      // CRITICAL FIX: Increase timeout for stability on mobile/background tabs
+      timeout: 300000, // Set to 5 minutes (matches server pingTimeout)
     });
 
     socket.on("connect", () => {

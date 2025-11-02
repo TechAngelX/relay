@@ -15,6 +15,10 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+  // CRITICAL FIX: Increase heartbeat frequency and timeout for stable connections
+  // This helps prevent 'ping timeout' disconnections, especially for background tabs/mobile.
+  pingInterval: 25000, // Send ping every 25 seconds
+  pingTimeout: 300000, // Wait 5 minutes (300 seconds) for a pong before disconnecting
 });
 
 // ===================================================================
