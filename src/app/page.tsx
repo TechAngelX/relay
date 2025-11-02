@@ -38,7 +38,7 @@ interface Message {
     id: string;
     text: string;
     sender: string;
-    to: string; // <--- ADDED: To reliably track the intended recipient for filtering
+    to: string; // <--- CRITICAL: To reliably track the intended recipient for filtering
     timestamp: string;
     isMine: boolean;
 }
@@ -75,7 +75,7 @@ export default function Home() {
                 sender: data.from,
                 to: data.to, // <--- NEW: Storing the recipient
                 timestamp: data.timestamp,
-                // CRITICAL FIX: Mark as 'mine' if the sender address is the current user's address (this is the echo).
+                // CRITICAL FIX: The message is mine if the sender matches the current user (case-insensitive check)
                 isMine: data.from.toLowerCase() === account.address.toLowerCase(),
             };
 
@@ -122,6 +122,7 @@ export default function Home() {
             isMine: true,
         };
 
+        // This is the message you just sent locally
         setMessages((prev) => [...prev, myMessage]);
 
         const socket = getSocket();
@@ -148,29 +149,30 @@ export default function Home() {
     // === Message Filtering Logic (CRITICAL FIX) ===
     const filteredMessages = messages.filter(
         (m) => {
-            // FIX for TS18047: Add null checks here as TypeScript cannot reliably infer non-null across hooks/returns
+            // FIX for TS18047: Add null checks here
             if (!account || !selectedContact) return false;
 
             const currentAddress = account.address.toLowerCase();
             const contactAddress = selectedContact.address.toLowerCase();
 
-            const isSenderMe = m.sender.toLowerCase() === currentAddress;
-            const isRecipientContact = m.to.toLowerCase() === contactAddress;
-            const isSenderContact = m.sender.toLowerCase() === contactAddress;
-            const isRecipientMe = m.to.toLowerCase() === currentAddress;
+            const mSender = m.sender.toLowerCase();
+            const mTo = m.to.toLowerCase();
 
-            // 1. Message I sent to the contact
-            if (isSenderMe && isRecipientContact) return true;
+            // A message belongs to the current chat (Current User <-> Selected Contact) if:
 
-            // 2. Message received from the contact
-            if (isSenderContact && isRecipientMe) return true;
+            // 1. I sent it to the contact (m.sender = me AND m.to = contact)
+            const isSentByMeToContact = mSender === currentAddress && mTo === contactAddress;
 
-            // 3. Special Case: Chatting A <-> A (cross-browser echo)
-            // This catches any message where the current user and the selected contact 
-            // address are the same (chatting to self).
-            if (currentAddress === contactAddress && (isSenderMe || isSenderContact)) return true;
+            // 2. The contact sent it to me (m.sender = contact AND m.to = me)
+            const isReceivedFromContact = mSender === contactAddress && mTo === currentAddress;
 
-            return false;
+            // 3. SPECIAL CASE: The conversation is a self-chat (A <-> A)
+            if (currentAddress === contactAddress) {
+                // Return true if the message is from me and sent to me.
+                return mSender === currentAddress && mTo === currentAddress;
+            }
+
+            return isSentByMeToContact || isReceivedFromContact;
         }
     );
 
