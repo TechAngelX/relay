@@ -1,5 +1,5 @@
 // src/app/components/ChatWindow.tsx
-"use client";
+'use client';
 
 import { useState, FormEvent, useEffect, useRef } from "react";
 import { getSocket } from "../services/socket";
@@ -29,7 +29,9 @@ export default function ChatWindow({
 
         console.log("Logging in:", currentUserAddress);
         socket.connect();
-        socket.emit("login", { address: currentUserAddress, type: "SUBSTRATE" });
+        // CRITICAL FIX: Send only the address for generic re-login.
+        // The backend uses this Hex address as the unique ID for routing.
+        socket.emit("login", { address: currentUserAddress });
 
         return () => {
             socket.off("receive-message");
