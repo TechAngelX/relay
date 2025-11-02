@@ -26,7 +26,6 @@ const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
 
 // === Types ===
 type Account = InjectedAccountWithMeta;
-
 interface Contact {
     address: string;
     name: string;
@@ -39,6 +38,7 @@ interface Message {
     id: string;
     text: string;
     sender: string;
+    to: string; // <--- NEW: Added to reliably track the recipient
     timestamp: string;
     isMine: boolean;
 }
@@ -63,22 +63,25 @@ export default function Home() {
 
         const handleReceiveMessage = (data: {
             from: string;
+            to: string; // <--- NEW: Extracting 'to' address from the server payload
             text: string;
             timestamp: string;
             id: string;
         }) => {
+
             const incoming: Message = {
                 id: data.id,
                 text: data.text,
                 sender: data.from,
+                to: data.to, // <--- NEW: Storing the recipient
                 timestamp: data.timestamp,
-                isMine: false,
+                isMine: data.from === account.address, // <--- NEW: Set to true if sender is me (echo message)
             };
 
             setMessages((prev) => [...prev, incoming]);
             setContacts((prev) =>
                 prev.map((c) =>
-                    c.address === data.from
+                    c.address === data.from || c.address === data.to // Check both sender and recipient
                         ? { ...c, lastMessage: data.text, timestamp: data.timestamp }
                         : c
                 )
@@ -109,6 +112,7 @@ export default function Home() {
             id: uuidv4(),
             text,
             sender: account.address,
+            to: selectedContact.address, // <--- NEW: Storing the recipient locally
             timestamp,
             isMine: true,
         };
@@ -139,10 +143,21 @@ export default function Home() {
     // === Render wallet connect ===
     if (!account) return <WalletConnect onConnect={setAccount} />;
 
+    // --- Message Filtering ---
+    const filteredMessages = messages.filter(
+        (m) =>
+            // Message is either sent FROM the contact TO me, 
+            (m.sender === selectedContact?.address && m.to === account.address) ||
+            // OR sent FROM me TO the contact. 
+            // This reliably includes local sends AND cross-browser echoes (where m.sender === account.address)
+            (m.sender === account.address && m.to === selectedContact?.address)
+    );
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
             {/* === Header === */}
-            <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
+            <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b 
+border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
                 <Link
                     href="/"
                     className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -189,7 +204,8 @@ export default function Home() {
             {/* === Main Layout === */}
             <div className="flex-1 flex overflow-hidden">
                 {/* === Contact List === */}
-                <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] transition-colors duration-300">
+                <div className="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[var(--color-darkcard)] 
+transition-colors duration-300">
                     <ContactList
                         contacts={contacts}
                         onSelectContact={setSelectedContact}
@@ -206,11 +222,7 @@ export default function Home() {
                 <ChatWindow
                     contact={selectedContact}
                     currentUserAddress={account.address}
-                    messages={messages.filter(
-                        (m) =>
-                            m.sender === selectedContact?.address ||
-                            (m.isMine && selectedContact)
-                    )}
+                    messages={filteredMessages} // <--- USING NEW FILTERED MESSAGE LIST
                     onSendMessage={handleSendMessage}
                     onStartCall={(mode) => {
                         setCallMode(mode);
