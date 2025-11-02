@@ -1,82 +1,30 @@
 // src/app/components/ChatWindow.tsx
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { getSocket } from "../services/socket";
+import { useState, FormEvent, useEffect, useRef } from "react";
 
 interface ChatWindowProps {
-    contact: {
-        name: string;
-        address: string;
-    } | null;
+    contact: { name: string; address: string } | null;
     currentUserAddress: string;
+    messages: { id: string; text: string; isMine: boolean }[];
+    onSendMessage: (text: string) => void;
     onStartCall: (mode: "video" | "audio") => void;
 }
 
 export default function ChatWindow({
                                        contact,
                                        currentUserAddress,
+                                       messages,
+                                       onSendMessage,
                                        onStartCall,
                                    }: ChatWindowProps) {
     const [text, setText] = useState("");
-    const [messages, setMessages] = useState<
-        { id: string; text: string; isMine: boolean }[]
-    >([]);
+    const endRef = useRef<HTMLDivElement>(null);
 
-    const socket = getSocket();
-
-    // ✅ Auto-login and message listener
     useEffect(() => {
-        if (!socket || !currentUserAddress) return;
+        endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
-        console.log("Logging in socket:", currentUserAddress);
-        socket.emit("login", { address: currentUserAddress, type: "GUEST" });
-
-        socket.on("receive-message", (data) => {
-            console.log("Message received:", data);
-            if (!contact || !data) return;
-
-            // ✅ Display if it's from or to the current chat contact
-            if (data.from === contact.address || data.to === contact.address) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: data.id || Date.now().toString(),
-                        text: data.text,
-                        isMine: data.from === currentUserAddress,
-                    },
-                ]);
-            }
-        });
-
-        return () => {
-            socket.off("receive-message");
-        };
-    }, [socket, contact, currentUserAddress]);
-
-    // ✅ Handle sending messages
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        if (!text.trim() || !contact) return;
-
-        const message = {
-            from: currentUserAddress,
-            to: contact.address,
-            text,
-            timestamp: new Date().toISOString(),
-        };
-
-        console.log("Sending message:", message);
-        socket.emit("send-message", message);
-
-        setMessages((prev) => [
-            ...prev,
-            { id: Date.now().toString(), text, isMine: true },
-        ]);
-        setText("");
-    };
-
-    // === No contact selected ===
     if (!contact) {
         return (
             <div className="flex flex-1 items-center justify-center text-gray-500">
@@ -85,7 +33,13 @@ export default function ChatWindow({
         );
     }
 
-    // === Chat UI ===
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        onSendMessage(text);
+        setText("");
+    };
+
     return (
         <div className="flex flex-col flex-1 bg-white dark:bg-[var(--color-darkbg)] transition-colors duration-300">
             {/* Header */}
@@ -121,6 +75,7 @@ export default function ChatWindow({
                         {msg.text}
                     </div>
                 ))}
+                <div ref={endRef} />
             </div>
 
             {/* Input */}

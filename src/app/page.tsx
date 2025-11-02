@@ -74,6 +74,7 @@ export default function Home() {
                 timestamp: data.timestamp,
                 isMine: false,
             };
+
             setMessages((prev) => [...prev, incoming]);
             setContacts((prev) =>
                 prev.map((c) =>
@@ -142,7 +143,6 @@ export default function Home() {
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
             {/* === Header === */}
             <header className="bg-white/80 dark:bg-[var(--color-darkcard)] border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm px-6 py-3 flex items-center justify-between transition-colors duration-300">
-                {/* === Logo + Title === */}
                 <Link
                     href="/"
                     className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -171,7 +171,9 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
+                        <p className="text-sm font-medium">
+                            {account.meta.name || "Account"}
+                        </p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"
@@ -193,23 +195,28 @@ export default function Home() {
                         onSelectContact={setSelectedContact}
                         selectedContact={selectedContact}
                         onAddContact={() => setIsAddContactModalOpen(true)}
-                        currentAccount={account?.address || null} // ✅ added
+                        currentAccount={account?.address || null}
                     />
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                         <UsernameRegistration currentUserAddress={account.address} />
                     </div>
                 </div>
 
+                {/* === Chat Window === */}
                 <ChatWindow
                     contact={selectedContact}
                     currentUserAddress={account.address}
+                    messages={messages.filter(
+                        (m) =>
+                            m.sender === selectedContact?.address ||
+                            (m.isMine && selectedContact)
+                    )}
+                    onSendMessage={handleSendMessage}
                     onStartCall={(mode) => {
                         setCallMode(mode);
                         setIsCalling(true);
                     }}
                 />
-
-
             </div>
 
             {/* === Add Contact Modal === */}
