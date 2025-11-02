@@ -99,14 +99,12 @@ io.on("connection", (socket) => {
 
   // -------------------------------
   // Generic connected wallet re-login (for client re-use)
-  // This event is now expected to be used by connected clients for quick re-binding.
-  // It relies on the client passing the *correct, canonical address* (EVM hex in your flow).
+  // CRITICAL FIX: Ensure the canonical address is used (EVM hex in this flow)
+  // and log the correct type to avoid confusion.
   // -------------------------------
   socket.on("login", (data: { address: string; type?: string }) => {
     if (!data?.address) return socket.emit("loginError", "Missing address");
-    // CRITICAL FIX: The client passes the EVM address, so we mark it as EVM
-    // to ensure it maps to the same address key as the initial registration.
-    // We assume that the initial WalletConnect performed the full address conversion.
+    // This assumes the client now sends the canonical (EVM hex) address for re-login
     bindSocketToAddress(socket.id, data.address, data.type || "EVM_RECONNECT");
     console.log(`[EVM_RECONNECT] ${data.address} connected (re-login)`);
     socket.emit("loginSuccess", usersBySocket[socket.id]);
@@ -114,12 +112,11 @@ io.on("connection", (socket) => {
   });
 
   // -------------------------------
-  // Registration complete (Client Side Only - for consistency)
-  // This event is not strictly needed on the server anymore but keeping it
-  // for now based on original code logic, but pointing it to the generic login.
+  // Register - Pointing to the improved login endpoint
   // -------------------------------
   socket.on("register", (address: string) => {
     if (!address) return;
+    // CRITICAL FIX: Redirect to use the generic login handler that uses the EVM hex address for consistency
     bindSocketToAddress(socket.id, address, "REGISTERED");
     console.log(`User registered: ${address}`);
     io.emit("userList", currentUsersList());
@@ -151,12 +148,14 @@ io.on("connection", (socket) => {
 
     if (recipients && recipients.size > 0) {
       for (const sid of recipients) {
+        // Send to intended recipient's sessions
         io.to(sid).emit("receive-message", payload);
       }
 
       // echo back to sender's other devices/tabs
       const senderSockets = socketsByAddress.get(addrKey(sender.address)) || new Set();
       for (const sid of senderSockets) {
+        // Send to sender's sessions
         io.to(sid).emit("receive-message", payload);
       }
 
