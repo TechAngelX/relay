@@ -38,7 +38,7 @@ interface Message {
     id: string;
     text: string;
     sender: string;
-    to: string; // <--- NEW: Added to reliably track the recipient
+    to: string; // <--- ADDED: To reliably track the intended recipient for filtering
     timestamp: string;
     isMine: boolean;
 }
@@ -75,13 +75,18 @@ export default function Home() {
                 sender: data.from,
                 to: data.to, // <--- NEW: Storing the recipient
                 timestamp: data.timestamp,
-                isMine: data.from === account.address, // <--- NEW: Set to true if sender is me (echo message)
+                // CRITICAL FIX: Mark as 'mine' if the sender address is the current user's address (this is the echo).
+                isMine: data.from.toLowerCase() === account.address.toLowerCase(),
             };
 
             setMessages((prev) => [...prev, incoming]);
+
+            // CRITICAL FIX: Update the contact list based on the relevant address (sender OR recipient)
+            const relevantAddress = incoming.isMine ? incoming.to : incoming.sender;
+
             setContacts((prev) =>
                 prev.map((c) =>
-                    c.address === data.from || c.address === data.to // Check both sender and recipient
+                    c.address.toLowerCase() === relevantAddress.toLowerCase()
                         ? { ...c, lastMessage: data.text, timestamp: data.timestamp }
                         : c
                 )
@@ -140,18 +145,37 @@ export default function Home() {
         }
     };
 
+    // === Message Filtering Logic (CRITICAL FIX) ===
+    const filteredMessages = messages.filter(
+        (m) => {
+            // FIX for TS18047: Add null checks here as TypeScript cannot reliably infer non-null across hooks/returns
+            if (!account || !selectedContact) return false;
+
+            const currentAddress = account.address.toLowerCase();
+            const contactAddress = selectedContact.address.toLowerCase();
+
+            const isSenderMe = m.sender.toLowerCase() === currentAddress;
+            const isRecipientContact = m.to.toLowerCase() === contactAddress;
+            const isSenderContact = m.sender.toLowerCase() === contactAddress;
+            const isRecipientMe = m.to.toLowerCase() === currentAddress;
+
+            // 1. Message I sent to the contact
+            if (isSenderMe && isRecipientContact) return true;
+
+            // 2. Message received from the contact
+            if (isSenderContact && isRecipientMe) return true;
+
+            // 3. Special Case: Chatting A <-> A (cross-browser echo)
+            // This catches any message where the current user and the selected contact 
+            // address are the same (chatting to self).
+            if (currentAddress === contactAddress && (isSenderMe || isSenderContact)) return true;
+
+            return false;
+        }
+    );
+
     // === Render wallet connect ===
     if (!account) return <WalletConnect onConnect={setAccount} />;
-
-    // --- Message Filtering ---
-    const filteredMessages = messages.filter(
-        (m) =>
-            // Message is either sent FROM the contact TO me, 
-            (m.sender === selectedContact?.address && m.to === account.address) ||
-            // OR sent FROM me TO the contact. 
-            // This reliably includes local sends AND cross-browser echoes (where m.sender === account.address)
-            (m.sender === account.address && m.to === selectedContact?.address)
-    );
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
