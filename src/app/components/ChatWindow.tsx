@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, FormEvent, useEffect, useRef } from "react";
+import { getSocket } from "../services/socket";
 
 interface ChatWindowProps {
     contact: { name: string; address: string } | null;
@@ -20,11 +21,27 @@ export default function ChatWindow({
                                    }: ChatWindowProps) {
     const [text, setText] = useState("");
     const endRef = useRef<HTMLDivElement>(null);
+    const socket = getSocket();
 
+    // === Auto-login socket to register wallet ===
+    useEffect(() => {
+        if (!socket || !currentUserAddress) return;
+
+        console.log("Logging in:", currentUserAddress);
+        socket.connect();
+        socket.emit("login", { address: currentUserAddress, type: "SUBSTRATE" });
+
+        return () => {
+            socket.off("receive-message");
+        };
+    }, [socket, currentUserAddress]);
+
+    // === Scroll to bottom when messages update ===
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    // === No contact selected ===
     if (!contact) {
         return (
             <div className="flex flex-1 items-center justify-center text-gray-500">
@@ -33,6 +50,7 @@ export default function ChatWindow({
         );
     }
 
+    // === Send message handler ===
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (!text.trim()) return;
@@ -40,6 +58,7 @@ export default function ChatWindow({
         setText("");
     };
 
+    // === Chat UI ===
     return (
         <div className="flex flex-col flex-1 bg-white dark:bg-[var(--color-darkbg)] transition-colors duration-300">
             {/* Header */}
