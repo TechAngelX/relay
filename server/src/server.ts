@@ -98,18 +98,25 @@ io.on("connection", (socket) => {
   });
 
   // -------------------------------
-  // Generic substrate login
+  // Generic connected wallet re-login (for client re-use)
+  // This event is now expected to be used by connected clients for quick re-binding.
+  // It relies on the client passing the *correct, canonical address* (EVM hex in your flow).
   // -------------------------------
   socket.on("login", (data: { address: string; type?: string }) => {
     if (!data?.address) return socket.emit("loginError", "Missing address");
-    bindSocketToAddress(socket.id, data.address, data.type || "SUBSTRATE");
-    console.log(`[SUBSTRATE] ${data.address} connected`);
+    // CRITICAL FIX: The client passes the EVM address, so we mark it as EVM
+    // to ensure it maps to the same address key as the initial registration.
+    // We assume that the initial WalletConnect performed the full address conversion.
+    bindSocketToAddress(socket.id, data.address, data.type || "EVM_RECONNECT");
+    console.log(`[EVM_RECONNECT] ${data.address} connected (re-login)`);
     socket.emit("loginSuccess", usersBySocket[socket.id]);
     io.emit("userList", currentUsersList());
   });
 
   // -------------------------------
-  // Register
+  // Registration complete (Client Side Only - for consistency)
+  // This event is not strictly needed on the server anymore but keeping it
+  // for now based on original code logic, but pointing it to the generic login.
   // -------------------------------
   socket.on("register", (address: string) => {
     if (!address) return;
