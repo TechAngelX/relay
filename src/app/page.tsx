@@ -61,9 +61,10 @@ export default function Home() {
         if (!account) return;
         const socket = getSocket();
 
+        // Ensure the incoming data type is correctly defined to include 'to'
         const handleReceiveMessage = (data: {
             from: string;
-            to: string; // <--- NEW: Extracting 'to' address from the server payload
+            to: string;
             text: string;
             timestamp: string;
             id: string;
@@ -73,7 +74,7 @@ export default function Home() {
                 id: data.id,
                 text: data.text,
                 sender: data.from,
-                to: data.to, // <--- NEW: Storing the recipient
+                to: data.to, // <--- CORRECTLY MAPPED
                 timestamp: data.timestamp,
                 // CRITICAL FIX: The message is mine if the sender matches the current user (case-insensitive check)
                 isMine: data.from.toLowerCase() === account.address.toLowerCase(),
@@ -117,7 +118,7 @@ export default function Home() {
             id: uuidv4(),
             text,
             sender: account.address,
-            to: selectedContact.address, // <--- NEW: Storing the recipient locally
+            to: selectedContact.address, // <--- CORRECTLY MAPPED
             timestamp,
             isMine: true,
         };
@@ -286,4 +287,3 @@ transition-colors duration-300">
         </div>
     );
 }
-
