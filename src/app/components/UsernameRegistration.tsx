@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { ethers } from "ethers";
-import usernameRegistryABI from "@/abis/UsernameRegistry.json";
+import usernameRegistryABI from "../../abis/UsernameRegistry.json";
 
 const CONTRACT_ADDRESS = "0x0E4716Dc8b9c6a6DC32867b50042d71C181B87C2";
 const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";

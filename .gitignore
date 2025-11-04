@@ -43,3 +43,4 @@ workspace.xml
 # NON-UPLOADABLE LOCAL FOLDERS
 # ==========================
 nonuploadable/
+ssl/

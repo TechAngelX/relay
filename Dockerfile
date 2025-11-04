@@ -1,40 +1,35 @@
+# Use node:20-alpine image
 FROM node:20-alpine
 
-# Set working directory
+# ========= Set working directory =========
 WORKDIR /app
 
-# Copy dependency manifests for frontend + backend
+# ========= Copy dependency manifests =========
 COPY package*.json ./
 COPY server/package*.json ./server/
 
-# Install dependencies for frontend
+# ========= Install dependencies =========
 RUN npm install
-
-# Install git (required by next.config.ts)
 RUN apk add --no-cache git
 
-# Install backend dependencies
-WORKDIR /app/server
-RUN npm install
+# ========= Copy source code =========
+COPY src ./src
+COPY server ./server
+COPY ssl ./ssl
+COPY server-https.js ./server-https.js
 
-# Go back to root
-WORKDIR /app
-
-# Copy full project
-COPY . .
-
-# Build both (ignore errors if frontend already built)
+# ========= Build frontend =========
 RUN npm run build || echo "frontend build skipped"
-WORKDIR /app/server
-RUN npm run build || echo "backend build skipped"
 
-# Install concurrently to run both together
+# ========= Expose ports =========
+EXPOSE 3000
+EXPOSE 3001
+
+# ========= Default working directory =========
 WORKDIR /app
-RUN npm install -g concurrently
 
-# Expose ports: 3000 (backend) + 3001 (frontend)
-EXPOSE 3000 3001
+# ========= Install concurrently for running multiple processes =========
+RUN npm install concurrently
 
-# Start both servers
-CMD ["concurrently", "node server/dist/server.js", "npm run dev"]
-
+# ========= Default command (HTTPS Dev) =========
+CMD ["npm", "run", "dev-all"]

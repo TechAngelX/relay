@@ -1,3 +1,5 @@
+// /next.config.ts
+
 import type { NextConfig } from "next";
 import { execSync } from "child_process";
 
@@ -10,6 +12,10 @@ const nextConfig: NextConfig = {
         NEXT_PUBLIC_BUILD_COMMIT: commit,
         NEXT_PUBLIC_BUILD_VERSION: version,
         NEXT_PUBLIC_BUILD_DATE: buildDate,
+    },
+    experimental: {
+        // @ts-expect-error — not yet in Next.js types
+        allowedDevOrigins: ["192.168.0.10"],
     },
 };
 

@@ -11,7 +11,9 @@ app.use(express.json());
 // ✅ Explicitly allow your production + local dev origins
 const allowedOrigins = [
   "https://relay.techangelx.com", // production frontend (Vercel)
-  "http://localhost:3001"         // dev
+  "http://192.168.0.10:3001",   // Docker Dev
+  "http://localhost:3001"   // dev
+
 ];
 
 app.use(
