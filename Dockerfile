@@ -1,4 +1,4 @@
-# Use node:20-alpine image
+# ========= Base image =========
 FROM node:20-alpine
 
 # ========= Set working directory =========
@@ -10,26 +10,34 @@ COPY server/package*.json ./server/
 
 # ========= Install dependencies =========
 RUN npm install
+
+# ✅ Install git so commit hashes can be read during build
 RUN apk add --no-cache git
 
-# ========= Copy source code =========
-COPY src ./src
-COPY server ./server
-COPY ssl ./ssl
-COPY server-https.js ./server-https.js
+# ========= Install backend dependencies =========
+WORKDIR /app/server
+RUN npm install
 
-# ========= Build frontend =========
-RUN npm run build || echo "frontend build skipped"
-
-# ========= Expose ports =========
-EXPOSE 3000
-EXPOSE 3001
-
-# ========= Default working directory =========
+# ========= Return to root =========
 WORKDIR /app
 
-# ========= Install concurrently for running multiple processes =========
-RUN npm install concurrently
+# ========= Copy entire project =========
+COPY . .
 
-# ========= Default command (HTTPS Dev) =========
-CMD ["npm", "run", "dev-all"]
+# ========= Build frontend + backend =========
+RUN npm run build || echo "frontend build skipped"
+WORKDIR /app/server
+RUN npm run build || echo "backend build skipped"
+
+# ========= Install concurrently globally =========
+WORKDIR /app
+RUN npm install -g concurrently
+
+# ========= Expose ports =========
+EXPOSE 3000 3001
+
+# ========= Start both frontend + backend =========
+# - Backend: runs /server/dist/server.js
+# - Frontend: runs Next.js HTTPS dev server
+CMD ["concurrently", "node server/dist/server.js", "npm run dev-https"]
+

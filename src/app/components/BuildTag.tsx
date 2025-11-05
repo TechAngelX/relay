@@ -3,13 +3,10 @@
 import React from "react";
 
 export default function BuildTag() {
-    const commit = process.env.NEXT_PUBLIC_BUILD_COMMIT ?? "local";
-    const version = process.env.NEXT_PUBLIC_BUILD_VERSION ?? "v-local";
+    const commit = process.env.NEXT_PUBLIC_BUILD_COMMIT ?? "unknown";
     const buildDate = process.env.NEXT_PUBLIC_BUILD_DATE ?? new Date().toISOString();
 
-    // ✅ locale-safe date string for hydration consistency
-    const formattedDate = new Date(buildDate)
-        .toISOString()
+    const formattedDate = buildDate
         .replace("T", " ")
         .replace("Z", " UTC");
 
@@ -19,11 +16,9 @@ export default function BuildTag() {
         WebkitTextFillColor: "transparent",
     } as const;
 
-    const tooltip = `Built from commit ${commit}\n${formattedDate}`;
-
     return (
         <div
-            title={tooltip}
+            title={formattedDate}
             style={{
                 position: "fixed",
                 bottom: 60,
@@ -43,7 +38,7 @@ export default function BuildTag() {
                 opacity: 0.9,
             }}
         >
-            <span style={gradientStyle}>{version}</span>
+            <span style={gradientStyle}>{commit}</span>
         </div>
     );
 }

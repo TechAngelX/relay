@@ -7,11 +7,11 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
+// ✅ Use the actual generated cert filenames
 const httpsOptions = {
   key: readFileSync("./ssl/localhost+3-key.pem"),
   cert: readFileSync("./ssl/localhost+3.pem"),
 };
-
 
 app.prepare().then(() => {
   createServer(httpsOptions, (req, res) => handle(req, res)).listen(3001, "0.0.0.0", () => {
