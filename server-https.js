@@ -7,14 +7,18 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// ✅ Use the actual generated cert filenames
+// ✅ Use ssl certs
 const httpsOptions = {
   key: readFileSync("./ssl/localhost+3-key.pem"),
   cert: readFileSync("./ssl/localhost+3.pem"),
 };
 
 app.prepare().then(() => {
-  createServer(httpsOptions, (req, res) => handle(req, res)).listen(3001, "0.0.0.0", () => {
-    console.log("🚀 HTTPS Relay running at https://0.0.0.0:3001");
+  const frontendServer = createServer(httpsOptions, (req, res) => handle(req, res));
+
+  frontendServer.listen(3001, "0.0.0.0", () => {
+    console.log("🖥️ Frontend HTTPS running at https://192.168.0.10:3001");
   });
+
 });
+
