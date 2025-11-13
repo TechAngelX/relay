@@ -1,6 +1,9 @@
 // server/src/server.ts
 import express from "express";
-import { createServer } from "http";
+import { createServer as createHttpServer } from "http";
+import { createServer as createHttpsServer } from "https";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { Server } from "socket.io";
 import cors from "cors";
 import { ethers } from "ethers";
@@ -8,23 +11,35 @@ import { ethers } from "ethers";
 const app = express();
 app.use(express.json());
 
-// ✅ Explicitly allow your production + local dev origins
 const allowedOrigins = [
-  "https://relay.techangelx.com", // production frontend (Vercel)
-  "http://192.168.0.10:3001",   // Docker Dev
-  "http://localhost:3001"   // dev
-
+  "https://relay.techangelx.com",
+  "https://192.168.0.10:3001",
+  "https://localhost:3001"
 ];
 
-app.use(
-    cors({
-      origin: allowedOrigins,
-      methods: ["GET", "POST"],
-      credentials: true,
-    })
-);
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
 
-const httpServer = createServer(app);
+// ✅ Check if we're in dev mode
+const isDev = process.env.NODE_ENV !== "production";
+let httpServer;
+
+if (isDev) {
+  // ✅ Path to SSL certs from server directory
+  const sslPath = resolve(__dirname, "../../ssl");
+  const httpsOptions = {
+    key: readFileSync(`${sslPath}/localhost+3-key.pem`),
+    cert: readFileSync(`${sslPath}/localhost+3.pem`),
+  };
+  httpServer = createHttpsServer(httpsOptions, app);
+  console.log("🔒 Using HTTPS for local dev");
+} else {
+  httpServer = createHttpServer(app);
+  console.log("🌐 Using HTTP (Fly.io handles SSL)");
+}
 
 const io = new Server(httpServer, {
   cors: {
@@ -36,11 +51,10 @@ const io = new Server(httpServer, {
 
 const users: Record<string, any> = {};
 
-// === CONNECTION ===
+// === Existing socket logic ===
 io.on("connection", (socket) => {
   console.log(`🟢 Connected: ${socket.id}`);
 
-  // ---------- GUEST LOGIN ----------
   socket.on("guestLogin", ({ id }) => {
     if (!id) return socket.emit("loginError", "Invalid guest ID");
     users[socket.id] = { address: id, type: "GUEST", connectedAt: new Date() };
@@ -49,7 +63,6 @@ io.on("connection", (socket) => {
     io.emit("userList", Object.values(users));
   });
 
-  // ---------- WALLET LOGIN (EVM / SUBSTRATE) ----------
   socket.on("walletLogin", async ({ address, signature, type }) => {
     try {
       if (!address || !signature)
@@ -72,7 +85,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ---------- POLKADOT LOGIN ----------
   socket.on("login", (data) => {
     if (!data.address) return socket.emit("loginError", "Missing address");
     users[socket.id] = {
@@ -85,7 +97,6 @@ io.on("connection", (socket) => {
     io.emit("userList", Object.values(users));
   });
 
-  // ---------- CHAT MESSAGES ----------
   socket.on("message", (msg) => {
     const user = users[socket.id];
     if (!user) return;
@@ -98,7 +109,6 @@ io.on("connection", (socket) => {
     io.emit("message", payload);
   });
 
-  // ---------- DISCONNECT ----------
   socket.on("disconnect", () => {
     const user = users[socket.id];
     if (user) {
@@ -109,10 +119,9 @@ io.on("connection", (socket) => {
   });
 });
 
-// === SERVER START ===
 const PORT = parseInt(process.env.PORT || "3000", 10);
 const HOST = "0.0.0.0";
 
 httpServer.listen(PORT, HOST, () => {
-  console.log(`🚀 Server running on ${HOST}:${PORT}`);
+  console.log(`🚀 Server running on ${isDev ? 'https' : 'http'}://${HOST}:${PORT}`);
 });
