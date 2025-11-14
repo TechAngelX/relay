@@ -1,3 +1,4 @@
+// src/app/components/VideoCall.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -21,15 +22,20 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const localStream = useRef<MediaStream | null>(null);
 
-  // audio meter
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
 
-
   useEffect(() => {
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: "turn:relay.metered.ca:80",
+          username: "openai",
+          credential: "openai",
+        },
+      ],
     });
 
     pcRef.current = pc;
@@ -46,11 +52,26 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
     pc.ontrack = (e) => {
       if (remoteVideo.current) {
-        remoteVideo.current.srcObject = e.streams[0];
+        if (!remoteVideo.current.srcObject) {
+          remoteVideo.current.srcObject = e.streams[0];
+        } else {
+          const vStream = remoteVideo.current.srcObject as MediaStream;
+          if (!vStream.getTracks().length) {
+            remoteVideo.current.srcObject = e.streams[0];
+          }
+        }
       }
     };
 
-    socket.on("webrtc-offer", async (msg) => {
+    pc.onconnectionstatechange = () => {
+      const state = pc.connectionState;
+      console.log("WebRTC connection state:", state);
+      if (state === "disconnected" || state === "failed" || state === "closed") {
+        setIsInCall(false);
+      }
+    };
+
+    const handleOffer = async (msg: any) => {
       if (msg.to !== userId) return;
 
       setStatus("Incoming call…");
@@ -60,7 +81,9 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
       const stream = await getUserMediaWithMeter();
       stream.getTracks().forEach((t) => pcRef.current!.addTrack(t, stream));
 
-      localVideo.current!.srcObject = stream;
+      if (localVideo.current) {
+        localVideo.current.srcObject = stream;
+      }
 
       const answer = await pcRef.current!.createAnswer();
       await pcRef.current!.setLocalDescription(answer);
@@ -73,42 +96,49 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
       setStatus("Connected");
       setIsInCall(true);
-    });
+    };
 
-    socket.on("webrtc-answer", async (msg) => {
+    const handleAnswer = async (msg: any) => {
       if (msg.to !== userId) return;
 
       await pcRef.current!.setRemoteDescription(msg.answer);
       setStatus("Connected");
       setIsInCall(true);
-    });
+    };
 
-    socket.on("webrtc-ice", async (msg) => {
+    const handleIce = async (msg: any) => {
       if (msg.to !== userId) return;
-
       try {
         await pcRef.current!.addIceCandidate(msg.candidate);
-      } catch {}
-    });
+      } catch (err) {
+        console.error("Error adding ICE candidate:", err);
+      }
+    };
+
+    socket.on("webrtc-offer", handleOffer);
+    socket.on("webrtc-answer", handleAnswer);
+    socket.on("webrtc-ice", handleIce);
 
     return () => {
-      socket.off("webrtc-offer");
-      socket.off("webrtc-answer");
-      socket.off("webrtc-ice");
+      socket.off("webrtc-offer", handleOffer);
+      socket.off("webrtc-answer", handleAnswer);
+      socket.off("webrtc-ice", handleIce);
       cleanupAudio();
       stopLocalMedia();
       pcRef.current?.close();
+      pcRef.current = null;
     };
-  }, [userId, remoteId]);
+  }, [userId, remoteId, socket]);
 
-
-  // Start Call
   const startCall = async () => {
     setStatus("Calling…");
 
     const stream = await getUserMediaWithMeter();
     localStream.current = stream;
-    localVideo.current!.srcObject = stream;
+
+    if (localVideo.current) {
+      localVideo.current.srcObject = stream;
+    }
 
     stream.getTracks().forEach((t) => pcRef.current!.addTrack(t, stream));
 
@@ -122,18 +152,23 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
     });
   };
 
-  
-  // End Call
   const endCall = () => {
     stopLocalMedia();
     cleanupAudio();
+    pcRef.current?.getSenders().forEach((s) => {
+      try {
+        s.replaceTrack(null);
+      } catch {
+        // ignore
+      }
+    });
     pcRef.current?.close();
+    pcRef.current = null;
 
     setIsInCall(false);
     setStatus("Call Ended");
   };
 
-  // Audio Meter
   const getUserMediaWithMeter = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: mode === "video",
@@ -148,7 +183,9 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   const startAudioMeter = (stream: MediaStream) => {
     cleanupAudio();
 
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioCtx =
+        window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const audioCtx = new AudioCtx();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
@@ -160,7 +197,9 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
     analyserRef.current = analyser;
 
     const loop = () => {
-      analyser.getByteTimeDomainData(data);
+      if (!analyserRef.current) return;
+
+      analyserRef.current.getByteTimeDomainData(data);
 
       let sum = 0;
       for (let i = 0; i < data.length; i++) {
@@ -179,19 +218,30 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   };
 
   const cleanupAudio = () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    audioCtxRef.current?.close?.();
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch {
+      }
+      audioCtxRef.current = null;
+    }
     analyserRef.current = null;
+    setInputLevel(0);
   };
 
   const stopLocalMedia = () => {
-    localStream.current?.getTracks().forEach((t) => t.stop());
-    localStream.current = null;
+    if (localStream.current) {
+      localStream.current.getTracks().forEach((t) => t.stop());
+      localStream.current = null;
+    }
   };
 
-  // Audio Meter UI
   const Meter = ({ level }: { level: number }) => {
-    const segments = 32; // smoother animation
+    const segments = 32;
     const activeCount = Math.round(level * segments);
 
     return (
@@ -206,8 +256,7 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
     );
   };
 
-  // UI OUTPUT
-    return (
+  return (
       <div className="flex flex-col items-center bg-white dark:bg-[var(--color-darkcard)] rounded-2xl shadow-lg p-6 w-[900px] max-w-full gap-4">
         <div className="w-full flex items-center justify-between">
           <h3 className="font-semibold text-lg">Video Call</h3>
@@ -215,18 +264,27 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
         </div>
 
         <div className="flex w-full justify-between gap-4">
-          {/* Local */}
           <div className="w-1/2">
-            <video ref={localVideo} autoPlay muted playsInline className="w-full rounded-lg shadow" />
+            <video
+                ref={localVideo}
+                autoPlay
+                muted
+                playsInline
+                className="w-full rounded-lg shadow"
+            />
             <div className="mt-2">
               <Meter level={inputLevel} />
               <p className="text-xs text-center opacity-60 mt-1">Mic level</p>
             </div>
           </div>
 
-          {/* Remote */}
           <div className="w-1/2">
-            <video ref={remoteVideo} autoPlay playsInline className="w-full rounded-lg shadow" />
+            <video
+                ref={remoteVideo}
+                autoPlay
+                playsInline
+                className="w-full rounded-lg shadow"
+            />
           </div>
         </div>
 
