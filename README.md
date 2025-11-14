@@ -204,17 +204,6 @@ The app will be available at:
 
 **Frontend Environment Variables**
 
-Create a `.env.local` file in the root directory:
-
-```bash
-NEXT_PUBLIC_SOCKET_URL=http://localhost:3000
-```
-
-For production, set in Vercel:
-
-```bash
-NEXT_PUBLIC_SOCKET_URL=https://your-backend-url.fly.dev
-```
 
 **Backend Environment Variables**
 
