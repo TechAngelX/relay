@@ -9,13 +9,11 @@ import cors from "cors";
 
 const app = express();
 app.use(express.json());
-
 const allowedOrigins = [
   "https://relay.techangelx.com",
   "https://192.168.0.10:3001",
   "https://localhost:3001"
 ];
-
 app.use(
     cors({
       origin: allowedOrigins,
@@ -23,12 +21,10 @@ app.use(
       credentials: true,
     })
 );
-
 const useHttps =
     process.env.USE_HTTPS_SERVER === "true" || process.env.NODE_ENV !== "production";
 
 let httpServer;
-
 if (useHttps) {
   const sslPath = resolve(__dirname, "../../ssl");
   const httpsOptions = {
@@ -49,10 +45,8 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-
 const users: Record<string, any> = {};
 const addressToSocket: Record<string, string> = {};
-
 io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
 
@@ -78,18 +72,24 @@ io.on("connection", (socket) => {
   });
 
   socket.on("webrtc-offer", (data) => {
-    const targetSocketId = addressToSocket[data.to] || data.to;
-    io.to(targetSocketId).emit("webrtc-offer", data);
+    const targetSocketId = addressToSocket[data.to]; // Use address mapping
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("webrtc-offer", data);
+    }
   });
 
   socket.on("webrtc-answer", (data) => {
-    const targetSocketId = addressToSocket[data.to] || data.to;
-    io.to(targetSocketId).emit("webrtc-answer", data);
+    const targetSocketId = addressToSocket[data.to]; // Use address mapping
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("webrtc-answer", data);
+    }
   });
 
   socket.on("webrtc-ice", (data) => {
-    const targetSocketId = addressToSocket[data.to] || data.to;
-    io.to(targetSocketId).emit("webrtc-ice", data);
+    const targetSocketId = addressToSocket[data.to]; // Use address mapping
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("webrtc-ice", data);
+    }
   });
 
   socket.on("disconnect", () => {
