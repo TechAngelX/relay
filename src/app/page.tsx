@@ -23,7 +23,6 @@ const WalletConnect = dynamic(() => import("./components/WalletConnect"), {
         </div>
     ),
 });
-
 // === Types ===
 type Account = InjectedAccountWithMeta;
 
@@ -43,6 +42,11 @@ interface Message {
     isMine: boolean;
 }
 
+interface IncomingCall {
+    from: string;
+    offer: RTCSessionDescriptionInit;
+}
+
 type CallMode = "video" | "audio" | null;
 
 // === Main Component ===
@@ -53,10 +57,15 @@ export default function Home() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // Tracks if a call is active (user accepted)
     const [isCalling, setIsCalling] = useState(false);
     const [callMode, setCallMode] = useState<CallMode>(null);
 
-    // === Socket setup ===
+    // 🛑 NEW: Tracks if a call is incoming (before acceptance)
+    const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
+
+    // === Socket setup for MESSAGES ===
     useEffect(() => {
         if (!account) return;
         const socket = getSocket();
@@ -90,6 +99,35 @@ export default function Home() {
         };
     }, [account]);
 
+    // 🛑 UPDATED: Socket setup for INCOMING CALLS
+    useEffect(() => {
+        if (!account) return;
+        const socket = getSocket();
+
+        const handleIncomingOffer = (data: { from: string; offer: RTCSessionDescriptionInit }) => {
+            const callerContact = contacts.find(c => c.address === data.from);
+
+            if (callerContact) {
+                // 1. Select the calling contact
+                setSelectedContact(callerContact);
+
+                // 2. Set the incoming call state (triggers prompt)
+                setIncomingCall({ from: data.from, offer: data.offer });
+
+                // We default to video, as the offer payload doesn't specify mode
+                setCallMode("video");
+
+                console.log(`Incoming call from ${callerContact.name}`);
+            }
+        };
+
+        socket.on("webrtc-offer", handleIncomingOffer);
+
+        return () => {
+            socket.off("webrtc-offer", handleIncomingOffer);
+        };
+    }, [account, contacts]);
+
     // === Add contact ===
     const handleAddContact = (address: string, name: string) => {
         setContacts((prev) => [{ address, name, online: false }, ...prev]);
@@ -98,12 +136,10 @@ export default function Home() {
     // === Send message ===
     const handleSendMessage = (text: string) => {
         if (!account || !selectedContact) return;
-
         const timestamp = new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
         });
-
         const myMessage: Message = {
             id: uuidv4(),
             text,
@@ -111,7 +147,6 @@ export default function Home() {
             timestamp,
             isMine: true,
         };
-
         setMessages((prev) => [...prev, myMessage]);
 
         const socket = getSocket();
@@ -135,8 +170,24 @@ export default function Home() {
         }
     };
 
+    // 🛑 NEW: Call action handlers
+    const acceptCall = () => {
+        // Set isCalling to true, which mounts the VideoCall component
+        setIsCalling(true);
+        // Clear the incoming call prompt
+        setIncomingCall(null);
+    };
+
+    const rejectCall = () => {
+        // Here you would typically send a signal to the caller to say the call was rejected.
+        // For now, we just clear the prompt.
+        setIncomingCall(null);
+    };
+
     // === Render wallet connect ===
     if (!account) return <WalletConnect onConnect={setAccount} />;
+
+    const callerName = selectedContact?.name || selectedContact?.address.slice(0, 6) + '...';
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[var(--color-darkbg)] text-gray-900 dark:text-gray-200 transition-colors duration-300">
@@ -171,7 +222,8 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                     <DarkModeToggle />
                     <div className="text-right">
-                        <p className="text-sm font-medium">{account.meta.name || "Account"}</p>
+                        <p className="text-sm font-medium">{account.meta.name ||
+                            "Account"}</p>
                         <p
                             onClick={copyAddress}
                             className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-pointer hover:text-blue-600 dark:hover:text-[var(--color-darkaccent)] transition"
@@ -193,7 +245,7 @@ export default function Home() {
                         onSelectContact={setSelectedContact}
                         selectedContact={selectedContact}
                         onAddContact={() => setIsAddContactModalOpen(true)}
-                        currentAccount={account?.address || null} // ✅ added
+                        currentAccount={account?.address || null}
                     />
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                         <UsernameRegistration currentUserAddress={account.address} />
@@ -223,6 +275,31 @@ export default function Home() {
                 onClose={() => setIsAddContactModalOpen(false)}
                 onAddContact={handleAddContact}
             />
+
+            {/* 🛑 NEW: Incoming Call Prompt */}
+            {incomingCall && selectedContact && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-[var(--color-darkcard)] p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
+                        <p className="text-lg font-semibold mb-4">
+                            Incoming Call from <span className="text-[var(--color-darkaccent)]">{callerName}</span>
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={acceptCall}
+                                className="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
+                            >
+                                Accept
+                            </button>
+                            <button
+                                onClick={rejectCall}
+                                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+                            >
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* === Video / Audio Call Modal === */}
             {isCalling && selectedContact && (

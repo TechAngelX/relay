@@ -3,7 +3,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getSocket } from "../services/socket";
-
 interface VideoCallProps {
   userId: string;
   remoteId: string;
@@ -25,7 +24,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
-
   useEffect(() => {
     const pc = new RTCPeerConnection({
       iceServers: [
@@ -67,7 +65,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
         }
       }
     };
-
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
       console.log("WebRTC connection state:", state);
@@ -78,34 +75,29 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
     const handleOffer = async (msg: any) => {
       if (msg.to !== userId) return;
-
       setStatus("Incoming call…");
 
       await pcRef.current!.setRemoteDescription(msg.offer);
 
       const stream = await getUserMediaWithMeter();
       stream.getTracks().forEach((t) => pcRef.current!.addTrack(t, stream));
-
       if (localVideo.current) {
         localVideo.current.srcObject = stream;
       }
 
       const answer = await pcRef.current!.createAnswer();
       await pcRef.current!.setLocalDescription(answer);
-
       socket.emit("webrtc-answer", {
         from: userId,
         to: msg.from,
         answer,
       });
-
       setStatus("Connected");
       setIsInCall(true);
     };
 
     const handleAnswer = async (msg: any) => {
       if (msg.to !== userId) return;
-
       await pcRef.current!.setRemoteDescription(msg.answer);
       setStatus("Connected");
       setIsInCall(true);
@@ -123,7 +115,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
     socket.on("webrtc-offer", handleOffer);
     socket.on("webrtc-answer", handleAnswer);
     socket.on("webrtc-ice", handleIce);
-
     return () => {
       socket.off("webrtc-offer", handleOffer);
       socket.off("webrtc-answer", handleAnswer);
@@ -138,23 +129,40 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   const startCall = async () => {
     setStatus("Calling…");
 
-    const stream = await getUserMediaWithMeter();
-    localStream.current = stream;
+    try {
+      const stream = await getUserMediaWithMeter();
+      localStream.current = stream;
 
-    if (localVideo.current) {
-      localVideo.current.srcObject = stream;
+      if (localVideo.current) {
+        localVideo.current.srcObject = stream;
+      }
+
+      stream.getTracks().forEach((t) => pcRef.current!.addTrack(t, stream));
+
+      const offer = await pcRef.current!.createOffer();
+      await pcRef.current!.setLocalDescription(offer);
+      socket.emit("webrtc-offer", {
+        from: userId,
+        to: remoteId,
+        offer,
+      });
+
+    } catch (error: any) {
+      console.error("Failed to start call:", error);
+      setStatus("Call Failed");
+
+      // 🛑 NEW: Handle System Denial Error Gracefully
+      if (error.name === "NotAllowedError" || error.message?.includes("system")) {
+        alert("Permission Denied: Please check your operating system's settings (e.g., macOS System Settings > Privacy & Security) to grant access to the Camera and Microphone for your browser.");
+      } else if (error.name === "NotFoundError") {
+        alert("No camera or microphone found.");
+      }
+
+      // Ensure call states are reset after failure
+      setIsInCall(false);
+      setStatus("Call Failed");
+      return; // Stop execution if we can't get media
     }
-
-    stream.getTracks().forEach((t) => pcRef.current!.addTrack(t, stream));
-
-    const offer = await pcRef.current!.createOffer();
-    await pcRef.current!.setLocalDescription(offer);
-
-    socket.emit("webrtc-offer", {
-      from: userId,
-      to: remoteId,
-      offer,
-    });
   };
 
   const endCall = () => {
@@ -179,7 +187,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
       video: mode === "video",
       audio: true,
     });
-
     localStream.current = stream;
     startAudioMeter(stream);
     return stream;
@@ -187,9 +194,9 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
   const startAudioMeter = (stream: MediaStream) => {
     cleanupAudio();
-
     const AudioCtx =
-        window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const audioCtx = new AudioCtx();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
@@ -200,7 +207,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
     audioCtxRef.current = audioCtx;
     analyserRef.current = analyser;
-
     const loop = () => {
       if (!analyserRef.current) return;
 
@@ -221,7 +227,6 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
 
     loop();
   };
-
   const cleanupAudio = () => {
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
