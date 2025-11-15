@@ -31,11 +31,16 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         {
-          urls: "turn:relay.metered.ca:80",
+          urls: [
+            "turn:relay.metered.ca:80",
+            "turn:relay.metered.ca:443",
+            "turns:relay.metered.ca:443",
+          ],
           username: "openai",
           credential: "openai",
         },
       ],
+
     });
 
     pcRef.current = pc;
