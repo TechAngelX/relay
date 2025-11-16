@@ -276,8 +276,30 @@ export default function Home() {
                 onAddContact={handleAddContact}
             />
 
-            {/* 🛑 NEW: Incoming Call Prompt */}
+            {/* === Video / Audio Call Modal (Z-Index: z-40) === */}
+            {isCalling && selectedContact && (
+                // Z-40 ensures the call modal is below the prompt modal
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40">
+                    <VideoCall
+                        userId={account.address}
+                        remoteId={selectedContact.address}
+                        mode={callMode || "video"}
+                    />
+                    <button
+                        onClick={() => {
+                            setIsCalling(false);
+                            setCallMode(null);
+                        }}
+                        className="absolute top-5 right-5 bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
+                    >
+                        ✖ End
+                    </button>
+                </div>
+            )}
+
+            {/* 🛑 Incoming Call Prompt (Z-Index: z-50) */}
             {incomingCall && selectedContact && (
+                // Z-50 ensures the prompt is above all other modals (e.g., z-40 call modal)
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-[var(--color-darkcard)] p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
                         <p className="text-lg font-semibold mb-4">
@@ -298,26 +320,6 @@ export default function Home() {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* === Video / Audio Call Modal === */}
-            {isCalling && selectedContact && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-                    <VideoCall
-                        userId={account.address}
-                        remoteId={selectedContact.address}
-                        mode={callMode || "video"}
-                    />
-                    <button
-                        onClick={() => {
-                            setIsCalling(false);
-                            setCallMode(null);
-                        }}
-                        className="absolute top-5 right-5 bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
-                    >
-                        ✖ End
-                    </button>
                 </div>
             )}
         </div>

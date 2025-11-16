@@ -151,7 +151,7 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
       console.error("Failed to start call:", error);
       setStatus("Call Failed");
 
-      // 🛑 NEW: Handle System Denial Error Gracefully
+      // 🛑 Handle System Denial Error Gracefully
       if (error.name === "NotAllowedError" || error.message?.includes("system")) {
         alert("Permission Denied: Please check your operating system's settings (e.g., macOS System Settings > Privacy & Security) to grant access to the Camera and Microphone for your browser.");
       } else if (error.name === "NotFoundError") {
@@ -161,7 +161,7 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
       // Ensure call states are reset after failure
       setIsInCall(false);
       setStatus("Call Failed");
-      return; // Stop execution if we can't get media
+      return;
     }
   };
 
@@ -183,13 +183,19 @@ export default function VideoCall({ userId, remoteId, mode }: VideoCallProps) {
   };
 
   const getUserMediaWithMeter = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: mode === "video",
-      audio: true,
-    });
-    localStream.current = stream;
-    startAudioMeter(stream);
-    return stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: mode === "video",
+        audio: true,
+      });
+      localStream.current = stream;
+      startAudioMeter(stream);
+      return stream;
+    } catch (error) {
+      // 🛑 Explicitly re-throw the error to ensure it's caught by startCall's try/catch
+      console.error("Media acquisition failed in getUserMediaWithMeter:", error);
+      throw error;
+    }
   };
 
   const startAudioMeter = (stream: MediaStream) => {
