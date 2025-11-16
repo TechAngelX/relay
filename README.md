@@ -19,6 +19,32 @@ A user-centric app where Polkadot users register a unique on-chain username, dis
 
 ![Relay App Screenshot](public/images/screenshot1.png)
 
+
+Prompt 1 — App Context 
+This is a web-streaming app and a live-communication app.
+It needs to be tested independently on different devices across different networks on the internet. Therefore, it MUST use htytps for wembacm and audio authorisation. do not recommend plain http.
+
+Prompt 2 — Production Setup:
+“Production = Fly.io backend (port 3000) on https://server-proud-shadow-4342.fly.dev
+
++ Vercel frontend (port 3001). on relay-815zrol3k-techangelxs-projects.vercel.app
+
+Prompt 3 — Token Cost Issue
+Rebuilding this setup each time is too expensive in tokens, therefore im using dockerfile to reproduce the setup.
+
+Prompt 4 — Docker Reproduction
+we must reproduce the production version using a Docker build to mimic the Fly.io + Vercel environment.
+
+Prompt 5 — Localhost Testing we use localhost just to test UI/CSS/cosmetic changes locally.
+
+What's broken:
+WebRTC signaling failed because devices were sending offers/answers to raw socket IDs, which changed on reconnect and didn’t match across devices. The frontend also used an incorrect WSS URL, causing Socket.IO to fail over HTTPS. As a result, peers never received each other’s WebRTC messages.
+
+The way to fix it:
+Route all messages using wallet addresses, not socket IDs. Normalize the Socket.IO URL (wss → https). Add HTTPS + CORS origins. After this, both devices communicated correctly.
+
+When i prmopt DT it means Desktop computer, typically running Brave Browser
+WHen i promy MB its my other ddevice, my macbook, typically runnign brave browesre, either on local url (https://192.168.0.10:3001/) or live production url relay.techangelx.com
 ---
 
 ## Overview
