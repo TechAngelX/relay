@@ -5,18 +5,10 @@
 A decentralised communication platform where Polkadot users register unique on-chain usernames, discover others, and instantly connect via peer-to-peer messaging and video chat; super fast and low latency — without sharing personal data or relying on centralised servers.
 
 Built on Polkadot's tech stack with EVM compatibility layer support for Ethereum users. Submitted to the Build Resilient Apps with Polkadot Cloud Hackathon.
-![Relay App Screenshot](public/images/screenshot1.png)
 
-<table>
-<tr>
-<td style="width:50%;">
-<img src="public/images/screenshot2.png" alt="screenshot2" style="width:100%;" />
-</td>
-<td style="width:50%;">
-<img src="public/images/screenshot3.png" alt="screenshot3" style="width:100%;" />
-</td>
-</tr>
-</table>
+![Relay App Screenshot](public/images/screenshot1.png)
+![screenshot2.png](public/images/screenshot2.png)
+![screenshot3.png](public/images/screenshot3.png)
 
 ---
 
