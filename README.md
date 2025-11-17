@@ -19,7 +19,7 @@ The project was initially submitted to the Build Resilient Apps with Polkadot Cl
 ## Live Demo
 
 **🚀 Live Demo
-Try it now: https://relay.techangelx.com[relay.techangelx.com](https://relay.techangelx.com)**
+Try it now: [relay.techangelx.com](https://relay.techangelx.com)**
 
 ---
 
