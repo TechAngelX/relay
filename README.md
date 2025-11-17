@@ -1,63 +1,74 @@
-<style>
-body {
-  font-size: 1.15rem; /* Slightly larger normal text for readability */
-  line-height: 1.75;
-}
-</style>
-
 # Relay - Polkadot Web3 Communication Platform
 
 **Polkadot-first, Ethereum-friendly**
 
-PolkaVM
-https://blockscout-passet-hub.parity-testnet.parity.io/
+A decentralised communication platform where Polkadot users register unique on-chain usernames, discover others, and instantly connect via peer-to-peer messaging and video chat; super fast and low latency — without sharing personal data or relying on centralised servers.
 
-The chat & identity system is built on Polkadot's tech stack, but can recognize and onboard users from the Ethereum world using the EVM compatibility layer.
-Decentralized Identity & Live Communication for Polkadot Users
-
-A user-centric app where Polkadot users register a unique on-chain username, discover others, and instantly connect via decentralized video chat — without sharing personal data or relying on centralized servers.
-
+Built on Polkadot's tech stack with EVM compatibility layer support for Ethereum users. Submitted to the Build Resilient Apps with Polkadot Cloud Hackathon.
 ![Relay App Screenshot](public/images/screenshot1.png)
 
-
-Prompt 1 — App Context 
-This is a web-streaming app and a live-communication app.
-It needs to be tested independently on different devices across different networks on the internet. Therefore, it MUST use htytps for wembacm and audio authorisation. do not recommend plain http.
-
-Prompt 2 — Production Setup:
-“Production = Fly.io backend (port 3000) on https://server-proud-shadow-4342.fly.dev
-
-+ Vercel frontend (port 3001). on relay-815zrol3k-techangelxs-projects.vercel.app
-
-Prompt 3 — Token Cost Issue
-Rebuilding this setup each time is too expensive in tokens, therefore im using dockerfile to reproduce the setup.
-
-Prompt 4 — Docker Reproduction
-we must reproduce the production version using a Docker build to mimic the Fly.io + Vercel environment.
-
-Prompt 5 — Localhost Testing we use localhost just to test UI/CSS/cosmetic changes locally.
-
-What's broken:
-WebRTC signaling failed because devices were sending offers/answers to raw socket IDs, which changed on reconnect and didn’t match across devices. The frontend also used an incorrect WSS URL, causing Socket.IO to fail over HTTPS. As a result, peers never received each other’s WebRTC messages.
-
-The way to fix it:
-Route all messages using wallet addresses, not socket IDs. Normalize the Socket.IO URL (wss → https). Add HTTPS + CORS origins. After this, both devices communicated correctly.
-
-When i prmopt DT it means Desktop computer, typically running Brave Browser
-WHen i promy MB its my other ddevice, my macbook, typically runnign brave browesre, either on local url (https://192.168.0.10:3001/) or live production url relay.techangelx.com
----
-
-## Overview
-
-**Relay** is a decentralized Web3 communication platform built on the Polkadot ecosystem. It enables secure, wallet-based messaging, video calls, and group rooms without requiring traditional authentication systems. Your wallet is your identity.
+<table>
+<tr>
+<td style="width:50%;">
+<img src="public/images/screenshot2.png" alt="screenshot2" style="width:100%;" />
+</td>
+<td style="width:50%;">
+<img src="public/images/screenshot3.png" alt="screenshot3" style="width:100%;" />
+</td>
+</tr>
+</table>
 
 ---
 
 ## Live Demo
 
-🚀 **[relay.techangelx.com](https://relay.techangelx.com)**
+**🚀 Live Demo
+Try it now: https://relay.techangelx.com[relay.techangelx.com](https://relay.techangelx.com)**
 
 ---
+
+## Overview
+
+**Relay** is a decentralised Web3 communication platform built on the Polkadot ecosystem. It enables secure, wallet-based messaging, video calls, and group rooms without requiring traditional authentication systems. Your wallet is your identity.
+
+---
+
+## Features
+
+### Wallet-Based Authentication
+* Connect with Polkadot.js extension
+* No passwords, no email signup
+* Your keys, your identity
+
+### Real-Time Messaging
+* Instant peer-to-peer messaging
+* Socket.io for real-time communication
+* Contact management system
+* Message history
+
+### Group Rooms
+* Create and join video chat rooms
+* Token-gated access *(coming soon)*
+* Multi-room video chat  *(coming soon)*
+* Persistent room links
+
+### Video & Voice Calls
+* WebRTC-powered peer-to-peer video calling
+* STUN/TURN servers for NAT traversal
+* Low-latency direct connections
+* Audio level metering
+
+### On-Chain Usernames
+* Register usernames on Passet Hub (Paseo testnet)
+* Smart contract-based identity
+* 0.001 PAS registration fee
+* Optional feature — works without registration
+
+### Modern UI
+* Beautiful Tailwind CSS design
+* Responsive and mobile-friendly
+* Smooth animations and transitions
+* Dark mode support
 
 ## How It Works
 
@@ -65,95 +76,21 @@ Relay uses a **dual-wallet architecture** for different purposes:
 
 ### Polkadot.js Extension (Primary Authentication)
 
-* **Purpose:** Login and chat identity
-* **What it does:** Connects your Substrate-based wallet to authenticate and identify you in the app
+* *Substrate Wallet ImplementationL:** Connects your Substrate-based wallet to authenticate and identify you in the app
 * **Address format:** Substrate address (e.g., `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY`)
-* **Used for:**
-
-  * Logging into Relay
-  * Your chat identity
-  * Contact management
-  * Receiving messages
 
 ### MetaMask (Optional - Username Registration)
 
-* **Purpose:** On-chain username registration on Passet Hub
-* **What it does:** Connects to the EVM-compatible Passet Hub testnet to register usernames
-* **Address format:** Ethereum-style address (e.g., `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`)
-* **Used for:**
+* **On-chain username registration on Passet Hub**
+* **Connects to the EVM-compatible Passet Hub testnet to register usernames**
+* **Ethereum-style address (e.g., `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`)**
+* **Used forRegistering on-chain usernames (optional)**
+* **Paying 0.001 PAS registration fee for nteracting with UsernameRegistry smart contract**
 
-  * Registering on-chain usernames (optional)
-  * Paying 0.001 PAS registration fee
-  * Interacting with UsernameRegistry smart contract
-
----
-
-### Authentication Flow
-
-```
-User Opens App ↓
-Connect Polkadot.js → Get Substrate Address → Login to Chat ↓
-User in Chat App (using Polkadot address) ↓
-Optional: Register Username ↓
-Connect MetaMask → Switch to Passet Hub → Pay 0.001 PAS → Username Saved ↓
-Back to Chat (username now displays instead of address)
-```
-
-> **Note:** You can use Relay without ever connecting MetaMask. Username registration is completely optional — the app works perfectly fine using just your wallet address.
-
----
-
-## Features
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-
-### 🪪 Wallet-Based Authentication
-
-* Connect with Polkadot.js extension
-* No passwords, no email signup
-* Your keys, your identity
-
-### 💬 Real-Time Messaging
-
-* Instant peer-to-peer messaging
-* Socket.io for real-time communication
-* Contact management system
-* Message history
-
-### 👥 Group Rooms
-
-* Create and join video chat rooms
-* Token-gated access *(coming soon)*
-* Persistent room links
-
-### 🎥 Video & Voice Calls
-
-* WebRTC-powered video calling
-* PeerJS for P2P connections
-* Low-latency communication
-
-### 🔗 On-Chain Usernames
-
-* Register usernames on Passet Hub (Paseo testnet)
-* Smart contract-based identity
-* 0.001 PAS registration fee
-* Optional feature — works without registration
-
-### 🎨 Modern UI
-
-* Beautiful Tailwind CSS design
-* Responsive and mobile-friendly
-* Smooth animations and transitions
-* Dark mode support
-
-</div>
-
----
 
 ## Tech Stack
 
 **Frontend:**
-
 * Next.js 15.5.6 with Turbopack
 * React 19 + TypeScript
 * PAPI (Polkadot API SDK)
@@ -161,32 +98,29 @@ Back to Chat (username now displays instead of address)
 * Deployed on Vercel
 
 **Backend:**
-
 * Node.js + Express
 * Socket.IO for real-time messaging
 * TypeScript
 * Deployed on Fly.io
 
 **Web3:**
-
 * Polkadot.js API (Substrate wallet connection)
 * Ethers.js (EVM interaction)
 * Solidity Smart Contracts
 * Hardhat (Smart contract development)
 
 **Communication:**
-
 * Socket.io (WebSocket for real-time messaging)
-* PeerJS (WebRTC for video/voice)
+* WebRTC (peer-to-peer video/voice)
+* STUN servers (Google STUN for NAT traversal)
+* TURN servers (Metered.ca relay for difficult networks)
 * IPFS (planned for file sharing)
 
 **Infrastructure:**
-
 * Frontend: Vercel
 * Backend: Fly.io
 * Custom domain: [relay.techangelx.com](https://relay.techangelx.com)
 
----
 
 ## Installation
 
@@ -197,8 +131,9 @@ Back to Chat (username now displays instead of address)
 * **Polkadot.js browser extension** (required)
 * **MetaMask** (optional - only needed for username registration)
 
-### Local Development Setup
+### Local Development Setup (HTTPS Required)
 
+**Important:** WebRTC requires HTTPS for camera and microphone access. Local development must use HTTPS.
 ```bash
 # Clone the repository
 git clone https://github.com/TechAngelX/relay.git
@@ -216,28 +151,171 @@ cd ..
 cd server
 npm run dev
 
-# Start frontend dev server (Terminal 2)
-npm run dev
+# Start frontend dev server with HTTPS (Terminal 2)
+npm run dev-https
 ```
 
 The app will be available at:
-**Frontend:** [http://localhost:3001](http://localhost:3001)
-**Backend:** [http://localhost:3000](http://localhost:3000)
-
----
+* **Frontend:** `https://localhost:3001`
+* **Backend:** `https://localhost:3000`
 
 ### Environment Setup
 
 **Frontend Environment Variables**
 
-
-**Backend Environment Variables**
-
+Create `.env.local`:
 ```bash
-PORT=3000
+NEXT_PUBLIC_SOCKET_URL=wss://localhost:3000
 ```
 
-Fly.io sets this automatically in production.
+For production:
+```bash
+NEXT_PUBLIC_SOCKET_URL=wss://relay-server.fly.dev
+```
+
+**Backend Environment Variables**
+```bash
+PORT=3000
+USE_HTTPS_SERVER=true
+```
+
+---
+
+## Docker Setup (Local NAT/HTTPS)
+
+For local network testing with HTTPS (required for camera/microphone access), you can run Relay in Docker.
+
+### 1. Generate SSL Certificates
+
+Create a local SSL certificate using [mkcert](https://github.com/FiloSottile/mkcert):
+```bash
+# Install mkcert (macOS)
+brew install mkcert
+brew install nss  # Firefox support
+
+# Install local CA
+mkcert -install
+
+# Create ssl directory (if it doesn't exist)
+mkdir -p ssl
+
+# Generate certificate for your local IP
+# Replace 192.168.0.10 with your actual local IP address
+mkcert -key-file ssl/localhost+3-key.pem -cert-file ssl/localhost+3.pem localhost 192.168.0.10 127.0.0.1
+
+# Verify certificates were created
+ls -la ssl/
+```
+
+**Find your local IP:**
+```bash
+# macOS
+ipconfig getifaddr en0
+
+# Linux
+hostname -I | awk '{print $1}'
+```
+
+### 2. Build Docker Image
+```bash
+docker build -t relay-full .
+```
+
+### 3. Run Docker Container
+
+Replace `192.168.0.10` with your actual local IP address:
+```bash
+docker run -p 3000:3000 -p 3001:3001 \
+  -v "$(pwd)/ssl:/app/ssl:ro" \
+  -e USE_HTTPS_SERVER=true \
+  -e NEXT_PUBLIC_SOCKET_URL=wss://192.168.0.10:3000 \
+  relay-full
+```
+
+### 4. Access the Application
+
+Open your browser and navigate to:
+```
+https://192.168.0.10:3001
+```
+
+**Important:** You must use `https://` for WebRTC to function properly.
+
+### 5. Enable Camera and Microphone Access
+
+**Important:** Browsers require HTTPS for camera/microphone access in WebRTC applications.
+
+**Chrome/Brave:**
+1. Navigate to `chrome://settings/content/camera`
+2. Add `https://192.168.0.10:3001` to allowed sites
+3. Navigate to `chrome://settings/content/microphone`
+4. Add `https://192.168.0.10:3001` to allowed sites
+
+**Firefox:**
+1. Navigate to `about:preferences#privacy`
+2. Scroll to "Permissions" section
+3. Click "Settings" next to Camera
+4. Allow `https://192.168.0.10:3001`
+5. Repeat for Microphone
+
+**macOS System Permissions:**
+1. Open System Settings → Privacy & Security
+2. Select Camera
+3. Enable access for your browser
+4. Select Microphone
+5. Enable access for your browser
+
+**Safari:**
+1. Go to Safari → Settings → Websites
+2. Select Camera and Microphone
+3. Set permissions for the site
+
+### Dockerfile
+```dockerfile
+# Base image
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency manifests
+COPY package*.json ./
+COPY server/package*.json ./server/
+
+# Install dependencies
+RUN npm install
+
+# Install git for commit hashes
+RUN apk add --no-cache git
+
+# Install backend dependencies
+WORKDIR /app/server
+RUN npm install
+
+# Return to root
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Build frontend and backend
+RUN npm run build || echo "frontend build skipped"
+WORKDIR /app/server
+RUN npm run build || echo "backend build skipped"
+
+# Install concurrently globally
+WORKDIR /app
+RUN npm install -g concurrently
+
+# Override socket URL for local backend
+ENV NEXT_PUBLIC_SOCKET_URL=wss://localhost:3000
+
+# Expose ports
+EXPOSE 3000 3001
+
+# Start both frontend and backend
+CMD ["concurrently", "node server/dist/server.js", "npm run dev-https"]
+```
 
 ---
 
@@ -247,11 +325,10 @@ Fly.io sets this automatically in production.
 
 1. Push to GitHub
 2. Import project in Vercel
-3. Add environment variable: `NEXT_PUBLIC_SOCKET_URL`
+3. Add environment variable: `NEXT_PUBLIC_SOCKET_URL=wss://relay-server.fly.dev`
 4. Deploy automatically on push
 
 ### Backend (Fly.io)
-
 ```bash
 cd server
 fly launch  # First time only
@@ -267,7 +344,7 @@ fly deploy  # Subsequent deployments
 * Install Polkadot.js extension
 * Click **"Connect Wallet"**
 * Approve the connection
-* You’re now logged in with your Substrate address
+* You're now logged in with your Substrate address
 
 ### 2. Set Username (Optional)
 
@@ -299,8 +376,8 @@ fly deploy  # Subsequent deployments
 * **Contract Address:** `0x0E4716Dc8b9c6a6DC32867b50042d71C181B87C2`
 * **Network:** Passet Hub Testnet (Paseo)
 * **Chain ID:** `0x190f1b46` (420420422 decimal)
-* **RPC:** [https://testnet-passet-hub-eth-rpc.polkadot.io](https://testnet-passet-hub-eth-rpc.polkadot.io)
-* **Explorer:** [https://blockscout-passet-hub.parity-testnet.parity.io](https://blockscout-passet-hub.parity-testnet.parity.io)
+* **RPC:** `https://testnet-passet-hub-eth-rpc.polkadot.io`
+* **Explorer:** `https://blockscout-passet-hub.parity-testnet.parity.io`
 
 **Contract Functions:**
 
@@ -312,42 +389,46 @@ fly deploy  # Subsequent deployments
 ---
 
 ## Project Structure
-
 ```
 relay/
 ├── src/
-│   ├── app/
-│   │   ├── components/      # React components
-│   │   ├── services/        # Business logic
-│   │   └── page.tsx         # Main page
-│   └── ...
+│   ├── app/              # Next.js application
+│   ├── abis/             # Smart contract ABIs
+│   ├── data/             # Local data storage
+│   └── types/            # TypeScript type definitions
 ├── server/
-│   ├── src/
-│   │   └── server.ts        # Express + Socket.io server
-│   ├── package.json
-│   └── tsconfig.json
-├── public/                  # Static assets
-├── contracts/               # Smart contracts
-├── next.config.ts
-└── package.json
+│   ├── src/              # Express + Socket.io backend
+│   ├── dist/             # Compiled backend
+│   └── fly.toml          # Fly.io configuration
+├── ssl/                  # SSL certificates (local dev)
+├── public/               # Static assets
+├── contracts/            # Smart contracts
+├── Dockerfile            # Docker configuration
+├── next.config.ts        # Next.js configuration
+└── package.json          # Dependencies
 ```
 
 ---
 
 ## Roadmap
 
+### Completed
 * [x] Polkadot.js wallet authentication
 * [x] Real-time messaging via Socket.io
-* [x] On-chain username registry (EVM)
-* [x] Video calling infrastructure (PeerJS)
+* [x] On-chain username registry (PolkaVM/EVM)
+* [x] WebRTC peer-to-peer video calling
+* [x] PeerJS integration
+* [x] STUN/TURN server configuration
 * [x] Dual wallet support (Substrate + EVM)
 * [x] Production deployment (Vercel + Fly.io)
-* [ ] End-to-end encryption
-* [ ] IPFS file sharing
+
+### Planned
+* [ ] End-to-end encryption for messages
+* [ ] IPFS picture and file sharing
+* [ ] Multi-participant video chat rooms
 * [ ] Token-gated rooms
 * [ ] NFT-based profiles
 * [ ] Mobile app (React Native)
-* [ ] Group video calls (multiple participants)
 * [ ] Cross-chain messaging
 
 ---
@@ -365,7 +446,6 @@ Usernames are stored locally in browser `localStorage` as a fallback until the b
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
 ```bash
 # Fork the repository
 git checkout -b feature/AmazingFeature
@@ -377,26 +457,29 @@ Open a Pull Request.
 
 ---
 
-## License
+## Licence
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **MIT Licence**.
 
 ---
 
 ## Author
 
 *Ricki Angel*
+
 GitHub: [@TechAngelX](https://github.com/TechAngelX)
+
 Website: [relay.techangelx.com](https://relay.techangelx.com)
 
 ---
 
-## Acknowledgments
+## Acknowledgements
 
 * Polkadot ecosystem and Parity Technologies
 * Passet Hub testnet infrastructure
 * Socket.io team for real-time communication
-* PeerJS maintainers for WebRTC implementation
+* WebRTC community for peer-to-peer protocols
+* PeerJS maintainers
 * Vercel and Fly.io for deployment infrastructure
 
 ---
