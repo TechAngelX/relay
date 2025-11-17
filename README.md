@@ -4,12 +4,16 @@
 
 A decentralised communication platform where Polkadot users register unique on-chain usernames, discover others, and instantly connect via peer-to-peer messaging and video chat; super fast and low latency — without sharing personal data or relying on centralised servers.
 
-Built on Polkadot's tech stack with EVM compatibility layer support for Ethereum users. Submitted to the Build Resilient Apps with Polkadot Cloud Hackathon.
+Built on Polkadot's tech stack with EVM compatibility layer support for Ethereum users.
 
+Currently running on PolkaVM technology ⭕️: the Passet Hub Testnet (Asset Hub on Paseo) with PolkaVM EVM compatibility layer, allowing deployment of Solidity smart contracts on Polkadot infrastructure.
+The project was initially submitted to the Build Resilient Apps with Polkadot Cloud Hackathon.
 ![Relay App Screenshot](public/images/screenshot1.png)
 ![screenshot2.png](public/images/screenshot2.png)
 ![screenshot3.png](public/images/screenshot3.png)
-
+![screenshot4.png](public/images/screenshot4.png)
+![screenshot6.png](public/images/screenshot6.png)
+![screenshot5.png](public/images/screenshot5.png)
 ---
 
 ## Live Demo
@@ -35,6 +39,7 @@ Try it now: https://relay.techangelx.com[relay.techangelx.com](https://relay.tec
 ### Real-Time Messaging
 * Instant peer-to-peer messaging
 * Socket.io for real-time communication
+* Cool Responsive Dark-Mode
 * Contact management system
 * Message history
 
@@ -113,6 +118,9 @@ Relay uses a **dual-wallet architecture** for different purposes:
 * Backend: Fly.io
 * Custom domain: [relay.techangelx.com](https://relay.techangelx.com)
 
+
+## Architectural Overview
+![archover.png](public/images/archover.png)
 
 ## Installation
 
@@ -379,7 +387,6 @@ fly deploy  # Subsequent deployments
 * `getAddress(string username)` — Get address for a username
 
 ---
-
 ## Project Structure
 ```
 relay/
