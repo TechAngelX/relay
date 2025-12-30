@@ -1,7 +1,7 @@
 # Relay - Polkadot Web3 Communication Platform
 
 **Polkadot-first, Ethereum-friendly**
-
+ 
 A decentralised communication platform where Polkadot users register unique on-chain usernames, discover others, and instantly connect via peer-to-peer messaging and video chat; super fast and low latency — without sharing personal data or relying on centralised servers.
 
 Built on Polkadot's tech stack with EVM compatibility layer support for Ethereum users.
